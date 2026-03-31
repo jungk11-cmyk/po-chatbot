@@ -35,7 +35,7 @@ const FaqPage = () => {
     }
     setOpen(false);
     setEditing(null);
-    setForm({ keyword: "", answer_html: "", sort_order: 0 });
+    setForm({ keyword: "", answer_html: "", sort_order: 0, search_keywords: "" });
     load();
   };
 
