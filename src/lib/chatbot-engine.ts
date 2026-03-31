@@ -39,7 +39,6 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
           isHtml: true,
         });
       }
-      }
     }
   }
 
