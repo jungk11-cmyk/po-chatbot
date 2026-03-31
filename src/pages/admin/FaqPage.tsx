@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -72,8 +72,8 @@ const FaqPage = () => {
                 <Input value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} placeholder="예: 사은행사 참여가능매장" />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">답변 HTML</label>
-                <Textarea value={form.answer_html} onChange={(e) => setForm({ ...form, answer_html: e.target.value })} rows={5} placeholder="답변 내용 (HTML 지원)" />
+                <label className="text-sm font-medium block mb-1">답변</label>
+                <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">정렬 순서</label>

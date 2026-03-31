@@ -1,4 +1,4 @@
-import { LayoutGrid, Hash, GitBranch, Store, LogOut } from "lucide-react";
+import { LayoutGrid, Hash, GitBranch, Store, LogOut, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ const items = [
   { title: "시나리오 관리", url: "/admin/scenarios", icon: GitBranch },
   { title: "FAQ 키워드", url: "/admin/faq", icon: Hash },
   { title: "입점 브랜드", url: "/admin/brands", icon: Store },
+  { title: "설정", url: "/admin/settings", icon: Settings },
 ];
 
 const AdminSidebar = () => {

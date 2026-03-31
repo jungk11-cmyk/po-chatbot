@@ -11,6 +11,7 @@ import CategoriesPage from "./pages/admin/CategoriesPage";
 import ScenariosPage from "./pages/admin/ScenariosPage";
 import FaqPage from "./pages/admin/FaqPage";
 import BrandsPage from "./pages/admin/BrandsPage";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="scenarios" element={<ScenariosPage />} />
             <Route path="faq" element={<FaqPage />} />
             <Route path="brands" element={<BrandsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
