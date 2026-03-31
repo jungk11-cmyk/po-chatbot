@@ -94,7 +94,7 @@ const CategoriesPage = () => {
             <TableHead className="w-16">순서</TableHead>
             <TableHead className="w-16">아이콘</TableHead>
             <TableHead>이름</TableHead>
-            <TableHead className="w-16">상태</TableHead>
+            <TableHead className="w-20">노출</TableHead>
             <TableHead className="w-24">관리</TableHead>
           </TableRow>
         </TableHeader>
@@ -104,7 +104,16 @@ const CategoriesPage = () => {
               <TableCell>{cat.sort_order}</TableCell>
               <TableCell>{cat.icon}</TableCell>
               <TableCell className="font-medium">{cat.name}</TableCell>
-              <TableCell>{cat.is_active ? "✅" : "❌"}</TableCell>
+              <TableCell>
+                <Switch
+                  checked={cat.is_active}
+                  onCheckedChange={async (checked) => {
+                    await supabase.from("chat_categories").update({ is_active: checked }).eq("id", cat.id);
+                    toast.success(checked ? "노출 ON" : "노출 OFF");
+                    load();
+                  }}
+                />
+              </TableCell>
               <TableCell>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(cat)}><Pencil className="w-4 h-4" /></Button>

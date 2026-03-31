@@ -175,8 +175,8 @@ const ScenariosPage = () => {
               <Input value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="예: 문의하실 내용을 선택해주세요~" />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">답변 HTML (최종 답변 - 하위 항목 없을 때)</label>
-              <Textarea value={form.answer_html} onChange={(e) => setForm({ ...form, answer_html: e.target.value })} placeholder="HTML 형태의 답변을 입력하세요..." rows={5} />
+              <label className="text-sm font-medium block mb-1">답변 (최종 답변 - 하위 항목 없을 때)</label>
+              <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">검색 인식 키워드 (쉼표로 구분)</label>
