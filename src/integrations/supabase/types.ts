@@ -87,6 +87,7 @@ export type Database = {
           id: string
           is_active: boolean
           keyword: string
+          search_keywords: string | null
           sort_order: number
           updated_at: string
         }
@@ -96,6 +97,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keyword: string
+          search_keywords?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keyword?: string
+          search_keywords?: string | null
           sort_order?: number
           updated_at?: string
         }

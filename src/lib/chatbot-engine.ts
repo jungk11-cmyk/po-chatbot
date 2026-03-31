@@ -23,7 +23,15 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
 
   if (faqs) {
     for (const faq of faqs) {
-      if (normalizedInput.includes(normalize(faq.keyword)) && faq.keyword.length > 0) {
+      const allKeywords = [faq.keyword];
+      const searchKw = (faq as any).search_keywords;
+      if (searchKw) {
+        allKeywords.push(...searchKw.split(",").map((k: string) => k.trim()));
+      }
+      const matched = allKeywords.some(
+        (kw) => kw.length > 0 && normalizedInput.includes(normalize(kw))
+      );
+      if (matched) {
         results.push({
           id: crypto.randomUUID(),
           type: "bot",

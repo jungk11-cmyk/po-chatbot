@@ -15,7 +15,7 @@ const FaqPage = () => {
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Faq | null>(null);
-  const [form, setForm] = useState({ keyword: "", answer_html: "", sort_order: 0 });
+  const [form, setForm] = useState({ keyword: "", answer_html: "", sort_order: 0, search_keywords: "" });
 
   const load = async () => {
     const { data } = await supabase.from("faq_keywords").select("*").order("sort_order");
@@ -35,7 +35,7 @@ const FaqPage = () => {
     }
     setOpen(false);
     setEditing(null);
-    setForm({ keyword: "", answer_html: "", sort_order: 0 });
+    setForm({ keyword: "", answer_html: "", sort_order: 0, search_keywords: "" });
     load();
   };
 
@@ -48,7 +48,7 @@ const FaqPage = () => {
 
   const openEdit = (faq: Faq) => {
     setEditing(faq);
-    setForm({ keyword: faq.keyword, answer_html: faq.answer_html, sort_order: faq.sort_order });
+    setForm({ keyword: faq.keyword, answer_html: faq.answer_html, sort_order: faq.sort_order, search_keywords: (faq as any).search_keywords || "" });
     setOpen(true);
   };
 
@@ -58,7 +58,7 @@ const FaqPage = () => {
         <h1 className="text-xl font-bold">FAQ 키워드 관리</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditing(null); setForm({ keyword: "", answer_html: "", sort_order: faqs.length }); }}>
+            <Button onClick={() => { setEditing(null); setForm({ keyword: "", answer_html: "", sort_order: faqs.length, search_keywords: "" }); }}>
               <Plus className="w-4 h-4 mr-1" />추가
             </Button>
           </DialogTrigger>
@@ -70,6 +70,11 @@ const FaqPage = () => {
               <div>
                 <label className="text-sm font-medium block mb-1">키워드 (#태그로 표시)</label>
                 <Input value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} placeholder="예: 사은행사 참여가능매장" />
+              </div>
+              <div>
+                <label className="text-sm font-medium block mb-1">검색 인식 키워드 (콤마로 구분)</label>
+                <Input value={form.search_keywords} onChange={(e) => setForm({ ...form, search_keywords: e.target.value })} placeholder="예: 삼성페이, 애플페이, 쓱페이" />
+                <p className="text-xs text-muted-foreground mt-1">고객이 입력할 수 있는 다양한 표현을 콤마(,)로 구분하여 등록하세요.</p>
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">답변</label>
