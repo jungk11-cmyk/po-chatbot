@@ -1,4 +1,4 @@
-import { LayoutGrid, Hash, GitBranch, Store, LogOut } from "lucide-react";
+import { LayoutGrid, Hash, GitBranch, Store, LogOut, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
