@@ -15,7 +15,7 @@ const FaqPage = () => {
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Faq | null>(null);
-  const [form, setForm] = useState({ keyword: "", answer_html: "", sort_order: 0 });
+  const [form, setForm] = useState({ keyword: "", answer_html: "", sort_order: 0, search_keywords: "" });
 
   const load = async () => {
     const { data } = await supabase.from("faq_keywords").select("*").order("sort_order");
