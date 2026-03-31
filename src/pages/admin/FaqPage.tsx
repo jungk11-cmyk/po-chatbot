@@ -72,6 +72,11 @@ const FaqPage = () => {
                 <Input value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} placeholder="예: 사은행사 참여가능매장" />
               </div>
               <div>
+                <label className="text-sm font-medium block mb-1">검색 인식 키워드 (콤마로 구분)</label>
+                <Input value={form.search_keywords} onChange={(e) => setForm({ ...form, search_keywords: e.target.value })} placeholder="예: 삼성페이, 애플페이, 쓱페이" />
+                <p className="text-xs text-muted-foreground mt-1">고객이 입력할 수 있는 다양한 표현을 콤마(,)로 구분하여 등록하세요.</p>
+              </div>
+              <div>
                 <label className="text-sm font-medium block mb-1">답변</label>
                 <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
               </div>
