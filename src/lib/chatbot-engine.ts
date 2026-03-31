@@ -54,25 +54,46 @@ export async function searchByKeyword(input: string): Promise<ChatMessage | null
     }
   }
 
-  // 2. Check brand tenants
+  // 2. Check brand tenants - find ALL matching stores
   const { data: brands } = await supabase
     .from("brand_tenants")
     .select("*")
     .eq("is_active", true);
 
   if (brands) {
-    for (const brand of brands) {
-      if (
+    const matched = brands.filter(
+      (brand) =>
         normalizedInput.includes(normalize(brand.brand_name)) ||
         normalizedInput.includes(normalize(brand.brand_name_en))
-      ) {
-        return {
-          id: crypto.randomUUID(),
-          type: "bot",
-          content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="https://www.simonpremium.com/${brand.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${brand.tenant_code}</a>`,
-          isHtml: true,
-        };
-      }
+    );
+
+    if (matched.length === 1) {
+      const brand = matched[0];
+      return {
+        id: crypto.randomUUID(),
+        type: "bot",
+        content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="https://www.simonpremium.com/${brand.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${brand.tenant_code}</a>`,
+        isHtml: true,
+      };
+    }
+
+    if (matched.length > 1) {
+      const brandName = matched[0].brand_name;
+      const brandNameEn = matched[0].brand_name_en;
+      const storeNames = matched.map((b) => b.store_name).join(", ");
+      const storeLinks = matched
+        .map(
+          (b) =>
+            `• <strong>${b.store_name}</strong> (${b.category})<br/>&nbsp;&nbsp;<a href="https://www.simonpremium.com/${b.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${b.tenant_code}</a>`
+        )
+        .join("<br/>");
+
+      return {
+        id: crypto.randomUUID(),
+        type: "bot",
+        content: `네~ <strong>${brandName}</strong>(${brandNameEn})이(가) [${storeNames}]에 입점해 있습니다.<br/>각 점포의 상세 정보는 아래 링크를 확인해주세요.<br/><br/>${storeLinks}`,
+        isHtml: true,
+      };
     }
   }
 
