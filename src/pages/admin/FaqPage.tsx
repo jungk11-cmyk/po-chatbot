@@ -58,7 +58,7 @@ const FaqPage = () => {
         <h1 className="text-xl font-bold">FAQ 키워드 관리</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditing(null); setForm({ keyword: "", answer_html: "", sort_order: faqs.length }); }}>
+            <Button onClick={() => { setEditing(null); setForm({ keyword: "", answer_html: "", sort_order: faqs.length, search_keywords: "" }); }}>
               <Plus className="w-4 h-4 mr-1" />추가
             </Button>
           </DialogTrigger>
