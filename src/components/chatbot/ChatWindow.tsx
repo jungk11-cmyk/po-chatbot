@@ -81,9 +81,9 @@ const ChatWindow = () => {
 
   const handleSend = async (text: string) => {
     addMessage({ id: crypto.randomUUID(), type: "user", content: text });
-    const result = await searchByKeyword(text);
-    if (result) {
-      addMessage(result);
+    const results = await searchByKeyword(text);
+    if (results.length > 0) {
+      results.forEach((msg) => addMessage(msg));
     } else {
       addMessage({
         id: crypto.randomUUID(),
