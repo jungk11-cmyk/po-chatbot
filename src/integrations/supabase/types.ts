@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brand_tenants: {
+        Row: {
+          brand_name: string
+          brand_name_en: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          store_name: string
+          tenant_code: string
+          updated_at: string
+        }
+        Insert: {
+          brand_name: string
+          brand_name_en: string
+          category: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          store_name: string
+          tenant_code: string
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          brand_name_en?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          store_name?: string
+          tenant_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      faq_keywords: {
+        Row: {
+          answer_html: string
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer_html: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_html?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scenario_nodes: {
+        Row: {
+          answer_html: string | null
+          category_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          keywords: string | null
+          label: string
+          message: string | null
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer_html?: string | null
+          category_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string | null
+          label: string
+          message?: string | null
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_html?: string | null
+          category_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string | null
+          label?: string
+          message?: string | null
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_nodes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "chat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "scenario_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
