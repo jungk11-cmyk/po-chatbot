@@ -125,6 +125,11 @@ const BrandsPage = () => {
         <div className="flex items-center gap-2">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="검색..." className="w-48" />
           <input ref={fileRef} type="file" accept=".csv,.xlsx" className="hidden" onChange={handleFileUpload} />
+          <Button variant="outline" size="sm" asChild>
+            <a href="/sample_brands.csv" download="sample_brands.csv">
+              <Download className="w-4 h-4 mr-1" />샘플 CSV
+            </a>
+          </Button>
           <Button variant="outline" onClick={() => fileRef.current?.click()}>
             <Upload className="w-4 h-4 mr-1" />CSV 업로드
           </Button>
