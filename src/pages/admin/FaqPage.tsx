@@ -48,7 +48,7 @@ const FaqPage = () => {
 
   const openEdit = (faq: Faq) => {
     setEditing(faq);
-    setForm({ keyword: faq.keyword, answer_html: faq.answer_html, sort_order: faq.sort_order });
+    setForm({ keyword: faq.keyword, answer_html: faq.answer_html, sort_order: faq.sort_order, search_keywords: (faq as any).search_keywords || "" });
     setOpen(true);
   };
 
