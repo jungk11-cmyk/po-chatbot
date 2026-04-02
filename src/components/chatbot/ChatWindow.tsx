@@ -11,6 +11,7 @@ import {
   getFaqKeywords,
   searchByKeyword,
 } from "@/lib/chatbot-engine";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
