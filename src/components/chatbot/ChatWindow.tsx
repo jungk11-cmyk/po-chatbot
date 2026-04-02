@@ -17,6 +17,7 @@ const ChatWindow = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [faqKeywords, setFaqKeywords] = useState<{ id: string; keyword: string; answer_html: string }[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     loadInitial();
