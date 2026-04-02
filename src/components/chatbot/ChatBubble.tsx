@@ -11,7 +11,7 @@ const ChatBubble = ({ message, onButtonClick, onBannerClick }: Props) => {
     <div className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
       <div className={`max-w-[85%] ${message.type === "user" ? "chat-bubble-user" : "chat-bubble-bot"}`}>
         {message.isHtml ? (
-          <div dangerouslySetInnerHTML={{ __html: message.content }} className="text-sm leading-relaxed [&_a]:underline [&_a]:text-blue-600" />
+          <div dangerouslySetInnerHTML={{ __html: message.content }} className="text-sm leading-relaxed break-all overflow-hidden [&_a]:underline [&_a]:text-blue-600 [&_a]:break-all [&_a]:word-break-break-all" style={{ wordBreak: "break-all", overflowWrap: "anywhere" }} />
         ) : (
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         )}
