@@ -5,12 +5,14 @@ export interface SiteSettings {
   bot_name: string;
   bot_subtitle: string;
   bot_logo_url: string;
+  no_result_message: string;
 }
 
 const defaults: SiteSettings = {
   bot_name: "신세계사이먼",
   bot_subtitle: "프리미엄 아울렛 고객센터",
   bot_logo_url: "",
+  no_result_message: "죄송합니다. 관련 내용을 찾을 수 없습니다.\n아래 카테고리에서 원하시는 항목을 선택해주세요.",
 };
 
 export function useSiteSettings() {
@@ -26,6 +28,7 @@ export function useSiteSettings() {
         bot_name: map.bot_name || defaults.bot_name,
         bot_subtitle: map.bot_subtitle || defaults.bot_subtitle,
         bot_logo_url: map.bot_logo_url || defaults.bot_logo_url,
+        no_result_message: map.no_result_message || defaults.no_result_message,
       });
     }
     setLoading(false);

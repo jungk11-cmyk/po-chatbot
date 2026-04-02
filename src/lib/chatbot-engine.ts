@@ -11,6 +11,16 @@ export interface ChatMessage {
 
 const normalize = (s: string) => s.replace(/\s+/g, "").toLowerCase();
 
+const STORE_CODE_MAP: Record<string, string> = {
+  "여주점": "01",
+  "파주점": "02",
+  "부산점": "03",
+  "시흥점": "05",
+  "제주점": "06",
+};
+
+const getStoreCode = (storeName: string): string => STORE_CODE_MAP[storeName] || "00";
+
 export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
   const normalizedInput = normalize(input);
   const results: ChatMessage[] = [];
@@ -98,10 +108,12 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
 
     if (matched.length === 1) {
       const brand = matched[0];
+      const storeCode = getStoreCode(brand.store_name);
+      const brandUrl = `https://app.premiumoutlets.co.kr/rpage/store/brand/category-view/${brand.tenant_code}/${storeCode}`;
       results.push({
         id: crypto.randomUUID(),
         type: "bot",
-        content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="https://www.simonpremium.com/${brand.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${brand.tenant_code}</a>`,
+        content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="${brandUrl}" target="_blank" class="underline text-blue-600">${brandUrl}</a>`,
         isHtml: true,
       });
     }
@@ -111,10 +123,11 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
       const brandNameEn = matched[0].brand_name_en;
       const storeNames = matched.map((b) => b.store_name).join(", ");
       const storeLinks = matched
-        .map(
-          (b) =>
-            `• <strong>${b.store_name}</strong> (${b.category})<br/>&nbsp;&nbsp;<a href="https://www.simonpremium.com/${b.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${b.tenant_code}</a>`
-        )
+        .map((b) => {
+          const sc = getStoreCode(b.store_name);
+          const url = `https://app.premiumoutlets.co.kr/rpage/store/brand/category-view/${b.tenant_code}/${sc}`;
+          return `• <strong>${b.store_name}</strong> (${b.category})<br/>&nbsp;&nbsp;<a href="${url}" target="_blank" class="underline text-blue-600">${url}</a>`;
+        })
         .join("<br/>");
 
       results.push({

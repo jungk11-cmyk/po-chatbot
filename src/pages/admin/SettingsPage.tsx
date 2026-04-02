@@ -9,6 +9,7 @@ const SettingsPage = () => {
   const [botName, setBotName] = useState("");
   const [botSubtitle, setBotSubtitle] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [noResultMessage, setNoResultMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -24,6 +25,7 @@ const SettingsPage = () => {
       setBotName(map.bot_name || "");
       setBotSubtitle(map.bot_subtitle || "");
       setLogoUrl(map.bot_logo_url || "");
+      setNoResultMessage(map.no_result_message || "");
     }
   };
 
@@ -53,6 +55,7 @@ const SettingsPage = () => {
         { key: "bot_name", value: botName },
         { key: "bot_subtitle", value: botSubtitle },
         { key: "bot_logo_url", value: logoUrl },
+        { key: "no_result_message", value: noResultMessage },
       ];
       for (const u of updates) {
         await supabase.from("site_settings").update({ value: u.value }).eq("key", u.key);
@@ -108,6 +111,17 @@ const SettingsPage = () => {
         <div>
           <label className="text-sm font-medium block mb-1">챗봇 부제</label>
           <Input value={botSubtitle} onChange={(e) => setBotSubtitle(e.target.value)} placeholder="예: 프리미엄 아울렛 고객센터" />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">검색 결과 없음 안내 문구</label>
+          <textarea
+            className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            value={noResultMessage}
+            onChange={(e) => setNoResultMessage(e.target.value)}
+            placeholder="예: 죄송합니다. 관련 내용을 찾을 수 없습니다."
+          />
+          <p className="text-xs text-muted-foreground mt-1">챗봇에서 검색 결과가 없을 때 표시되는 메시지입니다. 줄바꿈은 \n으로 입력하세요.</p>
         </div>
 
         <Button onClick={handleSave} disabled={saving} className="w-full">
