@@ -11,6 +11,16 @@ export interface ChatMessage {
 
 const normalize = (s: string) => s.replace(/\s+/g, "").toLowerCase();
 
+const STORE_CODE_MAP: Record<string, string> = {
+  "여주점": "01",
+  "파주점": "02",
+  "부산점": "03",
+  "시흥점": "05",
+  "제주점": "06",
+};
+
+const getStoreCode = (storeName: string): string => STORE_CODE_MAP[storeName] || "00";
+
 export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
   const normalizedInput = normalize(input);
   const results: ChatMessage[] = [];
