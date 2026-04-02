@@ -25,6 +25,7 @@ const SettingsPage = () => {
       setBotName(map.bot_name || "");
       setBotSubtitle(map.bot_subtitle || "");
       setLogoUrl(map.bot_logo_url || "");
+      setNoResultMessage(map.no_result_message || "");
     }
   };
 
