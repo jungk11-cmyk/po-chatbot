@@ -98,10 +98,12 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
 
     if (matched.length === 1) {
       const brand = matched[0];
+      const storeCode = getStoreCode(brand.store_name);
+      const brandUrl = `https://app.premiumoutlets.co.kr/rpage/store/brand/category-view/${brand.tenant_code}/${storeCode}`;
       results.push({
         id: crypto.randomUUID(),
         type: "bot",
-        content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="https://www.simonpremium.com/${brand.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${brand.tenant_code}</a>`,
+        content: `네~ <strong>${brand.brand_name}</strong>(${brand.brand_name_en})이(가) <strong>${brand.store_name}</strong>에 입점해 있습니다.<br/>카테고리: ${brand.category}<br/>자세한 브랜드 정보는 아래 링크를 클릭해주세요.<br/><a href="${brandUrl}" target="_blank" class="underline text-blue-600">${brandUrl}</a>`,
         isHtml: true,
       });
     }
