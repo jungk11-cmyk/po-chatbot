@@ -28,6 +28,7 @@ export function useSiteSettings() {
         bot_name: map.bot_name || defaults.bot_name,
         bot_subtitle: map.bot_subtitle || defaults.bot_subtitle,
         bot_logo_url: map.bot_logo_url || defaults.bot_logo_url,
+        no_result_message: map.no_result_message || defaults.no_result_message,
       });
     }
     setLoading(false);

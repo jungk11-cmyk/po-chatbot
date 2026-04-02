@@ -113,10 +113,11 @@ export async function searchByKeyword(input: string): Promise<ChatMessage[]> {
       const brandNameEn = matched[0].brand_name_en;
       const storeNames = matched.map((b) => b.store_name).join(", ");
       const storeLinks = matched
-        .map(
-          (b) =>
-            `• <strong>${b.store_name}</strong> (${b.category})<br/>&nbsp;&nbsp;<a href="https://www.simonpremium.com/${b.tenant_code}" target="_blank" class="underline text-blue-600">https://www.simonpremium.com/${b.tenant_code}</a>`
-        )
+        .map((b) => {
+          const sc = getStoreCode(b.store_name);
+          const url = `https://app.premiumoutlets.co.kr/rpage/store/brand/category-view/${b.tenant_code}/${sc}`;
+          return `• <strong>${b.store_name}</strong> (${b.category})<br/>&nbsp;&nbsp;<a href="${url}" target="_blank" class="underline text-blue-600">${url}</a>`;
+        })
         .join("<br/>");
 
       results.push({

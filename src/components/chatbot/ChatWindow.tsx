@@ -90,7 +90,7 @@ const ChatWindow = () => {
       addMessage({
         id: crypto.randomUUID(),
         type: "bot",
-        content: "죄송합니다. 관련 내용을 찾을 수 없습니다.\n아래 카테고리에서 원하시는 항목을 선택해주세요.",
+        content: settings.no_result_message.replace(/\\n/g, "\n"),
       });
       const cats = await getCategories();
       if (cats.length > 0) {
