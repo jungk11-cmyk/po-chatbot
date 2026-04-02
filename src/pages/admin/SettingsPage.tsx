@@ -9,6 +9,7 @@ const SettingsPage = () => {
   const [botName, setBotName] = useState("");
   const [botSubtitle, setBotSubtitle] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [noResultMessage, setNoResultMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
