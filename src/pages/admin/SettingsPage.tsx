@@ -55,6 +55,7 @@ const SettingsPage = () => {
         { key: "bot_name", value: botName },
         { key: "bot_subtitle", value: botSubtitle },
         { key: "bot_logo_url", value: logoUrl },
+        { key: "no_result_message", value: noResultMessage },
       ];
       for (const u of updates) {
         await supabase.from("site_settings").update({ value: u.value }).eq("key", u.key);
