@@ -27,9 +27,9 @@ const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
   };
 
   return (
-    <div className="border-t bg-card">
+    <div className="border-t">
       {faqKeywords.length > 0 && (
-        <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-[hsl(var(--navy)/0.04)] to-transparent">
+        <div className="px-4 pt-4 pb-3">
           <div className="flex items-center gap-2 mb-2.5 px-0.5">
             <span className="inline-block w-1 h-3.5 rounded-full bg-[hsl(var(--navy))]" />
             <p className="text-[12px] font-bold text-[hsl(var(--navy))] tracking-tight">
