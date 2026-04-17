@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   onSend: (text: string) => void;
@@ -7,8 +8,16 @@ interface Props {
   onFaqClick: (id: string) => void;
 }
 
+const FAQ_LABELS: Record<string, string> = {
+  ko: "다른 고객님들이 자주 묻는 질문이에요.",
+  en: "Frequently asked questions from other customers.",
+  zh: "其他顾客经常咨询的问题。",
+  ja: "他のお客様からよく寄せられる質問です。",
+};
+
 const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
   const [text, setText] = useState("");
+  const { language } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
