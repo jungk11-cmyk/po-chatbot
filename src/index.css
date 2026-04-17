@@ -43,10 +43,28 @@
     --chat-banner: 220 60% 20%;
     --chat-banner-foreground: 40 50% 95%;
     --chat-banner-hover: 220 60% 28%;
-    --gold: 38 70% 55%;
+    --gold: 38 75% 55%;
+    --gold-bright: 42 90% 62%;
     --gold-light: 38 60% 90%;
     --navy: 220 60% 20%;
+    --navy-deep: 222 65% 14%;
     --navy-light: 220 40% 40%;
+
+    /* Gradients */
+    --gradient-header: linear-gradient(135deg, hsl(222 65% 14%) 0%, hsl(220 60% 22%) 50%, hsl(225 55% 28%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(42 90% 62%) 0%, hsl(38 75% 50%) 100%);
+    --gradient-banner: linear-gradient(135deg, hsl(220 60% 22%) 0%, hsl(225 55% 32%) 100%);
+    --gradient-banner-hover: linear-gradient(135deg, hsl(225 60% 30%) 0%, hsl(220 55% 38%) 100%);
+    --gradient-bg: linear-gradient(180deg, hsl(220 30% 96%) 0%, hsl(220 20% 92%) 100%);
+    --gradient-bot-bubble: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 25% 96%) 100%);
+
+    /* Shadows */
+    --shadow-header: 0 4px 20px -4px hsl(222 65% 14% / 0.35);
+    --shadow-glow-gold: 0 0 0 1px hsl(42 90% 62% / 0.4), 0 4px 12px -2px hsl(38 75% 50% / 0.4);
+    --shadow-banner: 0 4px 14px -4px hsl(222 65% 14% / 0.3);
+    --shadow-bubble: 0 2px 8px -2px hsl(220 40% 20% / 0.08);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 220 60% 15%;
     --sidebar-foreground: 220 15% 90%;
@@ -72,18 +90,36 @@
 
 @layer utilities {
   .chat-bubble-user {
-    @apply bg-[hsl(var(--chat-user))] text-[hsl(var(--chat-user-foreground))] rounded-2xl rounded-br-sm px-4 py-2.5;
+    background: linear-gradient(135deg, hsl(220 60% 25%) 0%, hsl(220 65% 18%) 100%);
+    @apply text-[hsl(var(--chat-user-foreground))] rounded-2xl rounded-br-sm px-4 py-2.5 shadow-[var(--shadow-bubble)];
   }
   .chat-bubble-bot {
-    @apply bg-[hsl(var(--chat-bot))] text-[hsl(var(--chat-bot-foreground))] rounded-2xl rounded-bl-sm px-4 py-2.5;
+    background: var(--gradient-bot-bubble);
+    @apply text-[hsl(var(--chat-bot-foreground))] rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-[var(--shadow-bubble)] border border-border/40;
   }
   .chat-banner-card {
-    @apply bg-[hsl(var(--chat-banner))] text-[hsl(var(--chat-banner-foreground))] hover:bg-[hsl(var(--chat-banner-hover))] transition-colors cursor-pointer rounded-xl px-4 py-3 text-sm font-medium;
+    background: var(--gradient-banner);
+    @apply text-[hsl(var(--chat-banner-foreground))] cursor-pointer rounded-xl px-4 py-3 text-sm font-medium shadow-[var(--shadow-banner)] border border-[hsl(var(--gold)/0.2)] hover:-translate-y-0.5 transition-[transform,box-shadow,background] duration-300;
+  }
+  .chat-banner-card:hover {
+    background: var(--gradient-banner-hover);
+    box-shadow: 0 8px 20px -4px hsl(222 65% 14% / 0.4), 0 0 0 1px hsl(var(--gold) / 0.4);
   }
   .faq-tag {
-    @apply bg-[hsl(var(--gold-light))] text-[hsl(var(--navy))] hover:bg-[hsl(var(--gold))] hover:text-[hsl(var(--chat-user-foreground))] transition-colors cursor-pointer rounded-full px-3 py-1 text-xs font-medium;
+    @apply bg-[hsl(var(--gold-light))] text-[hsl(var(--navy))] hover:bg-[hsl(var(--gold))] hover:text-[hsl(var(--chat-user-foreground))] hover:shadow-md transition-all cursor-pointer rounded-full px-3 py-1 text-xs font-medium border border-[hsl(var(--gold)/0.3)];
   }
+  .gradient-header { background: var(--gradient-header); }
+  .gradient-gold { background: var(--gradient-gold); }
+  .gradient-bg { background: var(--gradient-bg); }
+  .shadow-header { box-shadow: var(--shadow-header); }
+  .shadow-glow-gold { box-shadow: var(--shadow-glow-gold); }
 }
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-shimmer { animation: shimmer 2.5s ease-in-out infinite; }
 
 .ProseMirror {
   @apply min-h-[120px] p-3 outline-none;

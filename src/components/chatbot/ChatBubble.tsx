@@ -33,7 +33,7 @@ const ChatBubble = ({ message, onButtonClick, onBannerClick }: Props) => {
               <button
                 key={btn.id}
                 onClick={() => onButtonClick?.(btn.id, btn.label)}
-                className="bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+                className="bg-gradient-to-br from-[hsl(var(--gold)/0.15)] to-[hsl(var(--gold)/0.05)] hover:from-[hsl(var(--gold))] hover:to-[hsl(var(--gold)/0.85)] text-[hsl(var(--navy))] hover:text-[hsl(var(--navy-deep))] text-xs font-semibold px-3.5 py-1.5 rounded-full border border-[hsl(var(--gold)/0.4)] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
               >
                 {btn.label}
               </button>

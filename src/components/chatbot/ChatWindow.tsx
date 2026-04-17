@@ -114,9 +114,9 @@ const ChatWindow = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-lg mx-auto bg-card shadow-xl">
+    <div className="flex flex-col h-screen max-w-lg mx-auto bg-card shadow-2xl shadow-[hsl(var(--navy-deep)/0.25)] border-x border-border/50">
       <ChatHeader />
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 gradient-bg">
         {messages.map((msg) => (
           <ChatBubble
             key={msg.id}
