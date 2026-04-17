@@ -12,28 +12,32 @@ import {
   searchByKeyword,
 } from "@/lib/chatbot-engine";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useLanguage, UI_TEXTS } from "@/contexts/LanguageContext";
 
 const ChatWindow = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [faqKeywords, setFaqKeywords] = useState<{ id: string; keyword: string; answer_html: string }[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const { settings } = useSiteSettings();
+  const { language } = useLanguage();
+  const { settings } = useSiteSettings(language);
+  const t = UI_TEXTS[language];
 
   useEffect(() => {
     loadInitial();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, settings.welcome_message]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const loadInitial = async () => {
-    const [cats, faqs] = await Promise.all([getCategories(), getFaqKeywords()]);
+    const [cats, faqs] = await Promise.all([getCategories(language), getFaqKeywords(language)]);
     setFaqKeywords(faqs);
     const welcomeMsg: ChatMessage = {
       id: crypto.randomUUID(),
       type: "bot",
-      content: "안녕하세요! 신세계사이먼 프리미엄 아울렛입니다.\n아래 항목 중 문의사항을 선택해주세요.",
+      content: settings.welcome_message,
       banners: cats.map((c) => ({ id: c.id, name: c.name, icon: c.icon || undefined })),
     };
     setMessages([welcomeMsg]);
@@ -43,17 +47,15 @@ const ChatWindow = () => {
 
   const handleBannerClick = async (categoryId: string, name: string) => {
     addMessage({ id: crypto.randomUUID(), type: "user", content: name });
-    const nodes = await getRootNodes(categoryId);
+    const nodes = await getRootNodes(categoryId, language);
     if (nodes.length === 0) {
-      addMessage({ id: crypto.randomUUID(), type: "bot", content: "등록된 항목이 없습니다." });
+      addMessage({ id: crypto.randomUUID(), type: "bot", content: t.noItems });
       return;
     }
-    // Check if first node has answer directly
-    const cat = (await getCategories()).find((c) => c.id === categoryId);
     addMessage({
       id: crypto.randomUUID(),
       type: "bot",
-      content: `${name}에 대해 문의하실 내용을 선택해주세요.`,
+      content: t.selectFromCategory(name),
       buttons: nodes.map((n) => ({ id: n.id, label: n.label })),
     });
   };
@@ -68,22 +70,22 @@ const ChatWindow = () => {
       return;
     }
 
-    const children = await getChildNodes(nodeId);
+    const children = await getChildNodes(nodeId, language);
     if (children.length > 0) {
       addMessage({
         id: crypto.randomUUID(),
         type: "bot",
-        content: node.message || `${label} 관련 항목을 선택해주세요.`,
+        content: node.message || t.selectFromCategory(label),
         buttons: children.map((c) => ({ id: c.id, label: c.label })),
       });
     } else {
-      addMessage({ id: crypto.randomUUID(), type: "bot", content: "등록된 답변이 없습니다." });
+      addMessage({ id: crypto.randomUUID(), type: "bot", content: t.noAnswer });
     }
   };
 
   const handleSend = async (text: string) => {
     addMessage({ id: crypto.randomUUID(), type: "user", content: text });
-    const results = await searchByKeyword(text);
+    const results = await searchByKeyword(text, language);
     if (results.length > 0) {
       results.forEach((msg) => addMessage(msg));
     } else {
@@ -92,7 +94,7 @@ const ChatWindow = () => {
         type: "bot",
         content: settings.no_result_message.replace(/\\n/g, "\n"),
       });
-      const cats = await getCategories();
+      const cats = await getCategories(language);
       if (cats.length > 0) {
         addMessage({
           id: crypto.randomUUID(),

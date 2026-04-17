@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Plus, ChevronRight, ChevronDown, Pencil, Trash2, FileText } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import LanguageTabs from "@/components/admin/LanguageTabs";
+import { LangCode } from "@/contexts/LanguageContext";
 
 type Category = Tables<"chat_categories">;
 type Node = Tables<"scenario_nodes">;
@@ -18,6 +20,7 @@ interface TreeNode extends Node {
 }
 
 const ScenariosPage = () => {
+  const [lang, setLang] = useState<LangCode>("ko");
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCat, setSelectedCat] = useState<string>("");
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -29,19 +32,35 @@ const ScenariosPage = () => {
     label: "", message: "", answer_html: "", keywords: "", sort_order: 0,
   });
 
+  // Reload categories when language changes
   useEffect(() => {
-    supabase.from("chat_categories").select("*").order("sort_order").then(({ data }) => {
-      setCategories(data || []);
-      if (data && data.length > 0 && !selectedCat) setSelectedCat(data[0].id);
-    });
-  }, []);
+    supabase
+      .from("chat_categories")
+      .select("*")
+      .eq("language", lang)
+      .order("sort_order")
+      .then(({ data }) => {
+        setCategories(data || []);
+        if (data && data.length > 0) {
+          setSelectedCat(data[0].id);
+        } else {
+          setSelectedCat("");
+          setNodes([]);
+        }
+      });
+  }, [lang]);
 
   useEffect(() => {
     if (selectedCat) loadNodes();
   }, [selectedCat]);
 
   const loadNodes = async () => {
-    const { data } = await supabase.from("scenario_nodes").select("*").eq("category_id", selectedCat).order("sort_order");
+    const { data } = await supabase
+      .from("scenario_nodes")
+      .select("*")
+      .eq("category_id", selectedCat)
+      .eq("language", lang)
+      .order("sort_order");
     setNodes(data || []);
   };
 
@@ -89,6 +108,7 @@ const ScenariosPage = () => {
       sort_order: form.sort_order,
       category_id: selectedCat,
       parent_id: parentId,
+      language: lang,
     };
     if (editing) {
       await supabase.from("scenario_nodes").update(payload).eq("id", editing.id);
@@ -135,8 +155,9 @@ const ScenariosPage = () => {
 
   return (
     <div>
+      <h1 className="text-xl font-bold mb-3">시나리오 관리</h1>
+      <LanguageTabs value={lang} onChange={setLang} />
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-xl font-bold">시나리오 관리</h1>
         <div className="flex items-center gap-3">
           <Select value={selectedCat} onValueChange={setSelectedCat}>
             <SelectTrigger className="w-48">
@@ -148,13 +169,16 @@ const ScenariosPage = () => {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => openNew(null)} disabled={!selectedCat}><Plus className="w-4 h-4 mr-1" />루트 노드 추가</Button>
+          {categories.length === 0 && (
+            <span className="text-sm text-muted-foreground">먼저 해당 언어의 카테고리를 등록해주세요.</span>
+          )}
         </div>
+        <Button onClick={() => openNew(null)} disabled={!selectedCat}><Plus className="w-4 h-4 mr-1" />루트 노드 추가</Button>
       </div>
 
       <div className="bg-card rounded-lg border p-4 min-h-[300px]">
         {tree.length === 0 ? (
-          <p className="text-center text-muted-foreground py-12">등록된 시나리오가 없습니다. 루트 노드를 추가해주세요.</p>
+          <p className="text-center text-muted-foreground py-12">등록된 시나리오가 없습니다.</p>
         ) : (
           tree.map((node) => renderNode(node, 0))
         )}
@@ -163,7 +187,7 @@ const ScenariosPage = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{editing ? "노드 수정" : "노드 추가"}</DialogTitle>
+            <DialogTitle>{editing ? "노드 수정" : "노드 추가"} ({lang.toUpperCase()})</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>

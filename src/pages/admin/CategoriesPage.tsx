@@ -8,21 +8,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import LanguageTabs from "@/components/admin/LanguageTabs";
+import { LangCode } from "@/contexts/LanguageContext";
 
 type Category = Tables<"chat_categories">;
 
 const CategoriesPage = () => {
+  const [lang, setLang] = useState<LangCode>("ko");
   const [categories, setCategories] = useState<Category[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [form, setForm] = useState({ name: "", icon: "", sort_order: 0 });
 
   const load = async () => {
-    const { data } = await supabase.from("chat_categories").select("*").order("sort_order");
+    const { data } = await supabase
+      .from("chat_categories")
+      .select("*")
+      .eq("language", lang)
+      .order("sort_order");
     setCategories(data || []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [lang]);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error("이름을 입력해주세요."); return; }
@@ -30,7 +37,7 @@ const CategoriesPage = () => {
       await supabase.from("chat_categories").update({ name: form.name, icon: form.icon || null, sort_order: form.sort_order }).eq("id", editing.id);
       toast.success("수정 완료");
     } else {
-      await supabase.from("chat_categories").insert({ name: form.name, icon: form.icon || null, sort_order: form.sort_order });
+      await supabase.from("chat_categories").insert({ name: form.name, icon: form.icon || null, sort_order: form.sort_order, language: lang });
       toast.success("추가 완료");
     }
     setOpen(false);
@@ -60,15 +67,16 @@ const CategoriesPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold">카테고리 관리 (메인 배너)</h1>
+      <h1 className="text-xl font-bold mb-3">카테고리 관리 (메인 배너)</h1>
+      <LanguageTabs value={lang} onChange={setLang} />
+      <div className="flex items-center justify-end mb-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew}><Plus className="w-4 h-4 mr-1" />추가</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editing ? "카테고리 수정" : "카테고리 추가"}</DialogTitle>
+              <DialogTitle>{editing ? "카테고리 수정" : "카테고리 추가"} ({lang.toUpperCase()})</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>

@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           brand_name: string
           brand_name_en: string
+          brand_name_ja: string | null
+          brand_name_zh: string | null
           category: string
           created_at: string
           id: string
@@ -29,6 +31,8 @@ export type Database = {
         Insert: {
           brand_name: string
           brand_name_en: string
+          brand_name_ja?: string | null
+          brand_name_zh?: string | null
           category: string
           created_at?: string
           id?: string
@@ -40,6 +44,8 @@ export type Database = {
         Update: {
           brand_name?: string
           brand_name_en?: string
+          brand_name_ja?: string | null
+          brand_name_zh?: string | null
           category?: string
           created_at?: string
           id?: string
@@ -56,6 +62,7 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          language: string
           name: string
           sort_order: number
           updated_at: string
@@ -65,6 +72,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          language?: string
           name: string
           sort_order?: number
           updated_at?: string
@@ -74,6 +82,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          language?: string
           name?: string
           sort_order?: number
           updated_at?: string
@@ -87,6 +96,7 @@ export type Database = {
           id: string
           is_active: boolean
           keyword: string
+          language: string
           search_keywords: string | null
           sort_order: number
           updated_at: string
@@ -97,6 +107,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keyword: string
+          language?: string
           search_keywords?: string | null
           sort_order?: number
           updated_at?: string
@@ -107,6 +118,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           keyword?: string
+          language?: string
           search_keywords?: string | null
           sort_order?: number
           updated_at?: string
@@ -122,6 +134,7 @@ export type Database = {
           is_active: boolean
           keywords: string | null
           label: string
+          language: string
           message: string | null
           parent_id: string | null
           sort_order: number
@@ -135,6 +148,7 @@ export type Database = {
           is_active?: boolean
           keywords?: string | null
           label: string
+          language?: string
           message?: string | null
           parent_id?: string | null
           sort_order?: number
@@ -148,6 +162,7 @@ export type Database = {
           is_active?: boolean
           keywords?: string | null
           label?: string
+          language?: string
           message?: string | null
           parent_id?: string | null
           sort_order?: number
@@ -175,6 +190,7 @@ export type Database = {
           created_at: string
           id: string
           key: string
+          language: string
           updated_at: string
           value: string
         }
@@ -182,6 +198,7 @@ export type Database = {
           created_at?: string
           id?: string
           key: string
+          language?: string
           updated_at?: string
           value: string
         }
@@ -189,6 +206,7 @@ export type Database = {
           created_at?: string
           id?: string
           key?: string
+          language?: string
           updated_at?: string
           value?: string
         }

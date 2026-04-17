@@ -4,29 +4,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Upload, Save } from "lucide-react";
+import LanguageTabs from "@/components/admin/LanguageTabs";
+import { LangCode } from "@/contexts/LanguageContext";
 
 const SettingsPage = () => {
+  const [lang, setLang] = useState<LangCode>("ko");
   const [botName, setBotName] = useState("");
   const [botSubtitle, setBotSubtitle] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [noResultMessage, setNoResultMessage] = useState("");
+  const [welcomeMessage, setWelcomeMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [lang]);
 
   const loadSettings = async () => {
-    const { data } = await supabase.from("site_settings").select("key, value");
+    const { data } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .eq("language", lang);
+    const map: Record<string, string> = {};
     if (data) {
-      const map: Record<string, string> = {};
       data.forEach((row: { key: string; value: string }) => { map[row.key] = row.value; });
-      setBotName(map.bot_name || "");
-      setBotSubtitle(map.bot_subtitle || "");
-      setLogoUrl(map.bot_logo_url || "");
-      setNoResultMessage(map.no_result_message || "");
     }
+    setBotName(map.bot_name || "");
+    setBotSubtitle(map.bot_subtitle || "");
+    setLogoUrl(map.bot_logo_url || "");
+    setNoResultMessage(map.no_result_message || "");
+    setWelcomeMessage(map.welcome_message || "");
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,7 +43,7 @@ const SettingsPage = () => {
     setUploading(true);
     try {
       const ext = file.name.split(".").pop();
-      const fileName = `bot-logo-${Date.now()}.${ext}`;
+      const fileName = `bot-logo-${lang}-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("logos").upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from("logos").getPublicUrl(fileName);
@@ -56,9 +64,13 @@ const SettingsPage = () => {
         { key: "bot_subtitle", value: botSubtitle },
         { key: "bot_logo_url", value: logoUrl },
         { key: "no_result_message", value: noResultMessage },
+        { key: "welcome_message", value: welcomeMessage },
       ];
       for (const u of updates) {
-        await supabase.from("site_settings").update({ value: u.value }).eq("key", u.key);
+        // upsert by (key, language)
+        await supabase
+          .from("site_settings")
+          .upsert({ key: u.key, value: u.value, language: lang }, { onConflict: "key,language" });
       }
       toast.success("설정이 저장되었습니다.");
     } catch (err: any) {
@@ -70,7 +82,9 @@ const SettingsPage = () => {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-xl font-bold mb-6">관리자 설정</h1>
+      <h1 className="text-xl font-bold mb-3">관리자 설정</h1>
+      <LanguageTabs value={lang} onChange={setLang} />
+      <p className="text-xs text-muted-foreground mb-4">언어별로 챗봇 이름, 부제, 안내 문구 등을 각각 설정할 수 있습니다.</p>
       <div className="space-y-6">
         <div>
           <label className="text-sm font-medium block mb-2">챗봇 로고</label>
@@ -92,7 +106,7 @@ const SettingsPage = () => {
                 </Button>
               </label>
               <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-              <p className="text-xs text-muted-foreground mt-1">챗봇 헤더와 대화에 사용됩니다.</p>
+              <p className="text-xs text-muted-foreground mt-1">언어별로 별도 로고를 설정할 수 있습니다.</p>
             </div>
           </div>
           {logoUrl && (
@@ -105,7 +119,6 @@ const SettingsPage = () => {
         <div>
           <label className="text-sm font-medium block mb-1">챗봇 이름</label>
           <Input value={botName} onChange={(e) => setBotName(e.target.value)} placeholder="예: 신세계사이먼" />
-          <p className="text-xs text-muted-foreground mt-1">챗봇 헤더에 표시되는 이름입니다.</p>
         </div>
 
         <div>
@@ -114,19 +127,28 @@ const SettingsPage = () => {
         </div>
 
         <div>
+          <label className="text-sm font-medium block mb-1">환영 메시지</label>
+          <textarea
+            className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={welcomeMessage}
+            onChange={(e) => setWelcomeMessage(e.target.value)}
+            placeholder="챗봇 첫 화면에 표시되는 인사말"
+          />
+        </div>
+
+        <div>
           <label className="text-sm font-medium block mb-1">검색 결과 없음 안내 문구</label>
           <textarea
-            className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={noResultMessage}
             onChange={(e) => setNoResultMessage(e.target.value)}
-            placeholder="예: 죄송합니다. 관련 내용을 찾을 수 없습니다."
+            placeholder="검색 결과가 없을 때 표시되는 메시지"
           />
-          <p className="text-xs text-muted-foreground mt-1">챗봇에서 검색 결과가 없을 때 표시되는 메시지입니다. 줄바꿈은 \n으로 입력하세요.</p>
         </div>
 
         <Button onClick={handleSave} disabled={saving} className="w-full">
           <Save className="w-4 h-4 mr-1" />
-          {saving ? "저장 중..." : "설정 저장"}
+          {saving ? "저장 중..." : `${lang.toUpperCase()} 설정 저장`}
         </Button>
       </div>
     </div>
