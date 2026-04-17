@@ -9,10 +9,10 @@ interface Props {
 }
 
 const FAQ_LABELS: Record<string, string> = {
-  ko: "다른 고객님들이 자주 묻는 질문이에요.",
-  en: "Frequently asked questions from other customers.",
-  zh: "其他顾客经常咨询的问题。",
-  ja: "他のお客様からよく寄せられる質問です。",
+  ko: "다른 고객님들이 자주 묻는 질문이에요!",
+  en: "Frequently asked questions from other customers!",
+  zh: "其他顾客经常咨询的问题!",
+  ja: "他のお客様からよく寄せられる質問です!",
 };
 
 const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
@@ -29,11 +29,14 @@ const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
   return (
     <div className="border-t bg-card">
       {faqKeywords.length > 0 && (
-        <div className="px-3 pt-3 pb-1">
-          <p className="text-[11px] font-medium text-muted-foreground mb-1.5 px-1">
-            {FAQ_LABELS[language]}
-          </p>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        <div className="px-4 pt-4 pb-3 bg-gradient-to-b from-[hsl(var(--navy)/0.04)] to-transparent">
+          <div className="flex items-center gap-2 mb-2.5 px-0.5">
+            <span className="inline-block w-1 h-3.5 rounded-full bg-[hsl(var(--navy))]" />
+            <p className="text-[12px] font-bold text-[hsl(var(--navy))] tracking-tight">
+              {FAQ_LABELS[language]}
+            </p>
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
             {faqKeywords.map((faq) => (
               <button key={faq.id} onClick={() => onFaqClick(faq.id)} className="faq-tag whitespace-nowrap flex-shrink-0">
                 #{faq.keyword}
@@ -48,7 +51,7 @@ const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="메시지를 입력해주세요..."
-          className="flex-1 bg-muted rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          className="flex-1 bg-white border border-border rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
         />
         <button
           type="submit"
