@@ -55,7 +55,7 @@ const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
         />
         <button
           type="submit"
-          className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:opacity-90 transition-opacity"
+          className="send-btn-gradient w-10 h-10 rounded-full flex items-center justify-center text-white"
         >
           <Send className="w-4 h-4" />
         </button>
