@@ -29,12 +29,17 @@ const ChatInput = ({ onSend, faqKeywords, onFaqClick }: Props) => {
   return (
     <div className="border-t bg-card">
       {faqKeywords.length > 0 && (
-        <div className="px-3 pt-2 pb-1 flex gap-2 overflow-x-auto scrollbar-hide">
-          {faqKeywords.map((faq) => (
-            <button key={faq.id} onClick={() => onFaqClick(faq.id)} className="faq-tag whitespace-nowrap flex-shrink-0">
-              #{faq.keyword}
-            </button>
-          ))}
+        <div className="px-3 pt-3 pb-1">
+          <p className="text-[11px] font-medium text-muted-foreground mb-1.5 px-1">
+            {FAQ_LABELS[language]}
+          </p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {faqKeywords.map((faq) => (
+              <button key={faq.id} onClick={() => onFaqClick(faq.id)} className="faq-tag whitespace-nowrap flex-shrink-0">
+                #{faq.keyword}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex items-center gap-2 p-3">
