@@ -11,12 +11,32 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Brand = Tables<"brand_tenants">;
 
+interface BrandForm {
+  store_name: string;
+  brand_name: string;
+  brand_name_en: string;
+  brand_name_zh: string;
+  brand_name_ja: string;
+  category: string;
+  tenant_code: string;
+}
+
+const emptyForm: BrandForm = {
+  store_name: "",
+  brand_name: "",
+  brand_name_en: "",
+  brand_name_zh: "",
+  brand_name_ja: "",
+  category: "",
+  tenant_code: "",
+};
+
 const BrandsPage = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Brand | null>(null);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ store_name: "", brand_name: "", brand_name_en: "", category: "", tenant_code: "" });
+  const [form, setForm] = useState<BrandForm>(emptyForm);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -30,20 +50,23 @@ const BrandsPage = () => {
     if (!form.store_name || !form.brand_name || !form.tenant_code) {
       toast.error("필수 항목을 입력해주세요."); return;
     }
+    const payload = {
+      ...form,
+      brand_name_zh: form.brand_name_zh || null,
+      brand_name_ja: form.brand_name_ja || null,
+    };
     if (editing) {
-      await supabase.from("brand_tenants").update(form).eq("id", editing.id);
+      await supabase.from("brand_tenants").update(payload).eq("id", editing.id);
       toast.success("수정 완료");
     } else {
-      await supabase.from("brand_tenants").insert(form);
+      await supabase.from("brand_tenants").insert(payload);
       toast.success("추가 완료");
     }
     setOpen(false);
     setEditing(null);
-    resetForm();
+    setForm(emptyForm);
     load();
   };
-
-  const resetForm = () => setForm({ store_name: "", brand_name: "", brand_name_en: "", category: "", tenant_code: "" });
 
   const handleDelete = async (id: string) => {
     if (!confirm("삭제하시겠습니까?")) return;
@@ -54,7 +77,15 @@ const BrandsPage = () => {
 
   const openEdit = (b: Brand) => {
     setEditing(b);
-    setForm({ store_name: b.store_name, brand_name: b.brand_name, brand_name_en: b.brand_name_en, category: b.category, tenant_code: b.tenant_code });
+    setForm({
+      store_name: b.store_name,
+      brand_name: b.brand_name,
+      brand_name_en: b.brand_name_en,
+      brand_name_zh: (b as any).brand_name_zh || "",
+      brand_name_ja: (b as any).brand_name_ja || "",
+      category: b.category,
+      tenant_code: b.tenant_code,
+    });
     setOpen(true);
   };
 
@@ -73,12 +104,14 @@ const BrandsPage = () => {
             store_name: r["점포"],
             brand_name: r["브랜드명"],
             brand_name_en: r["영문브랜드명"] || "",
+            brand_name_zh: r["중문브랜드명"] || null,
+            brand_name_ja: r["일문브랜드명"] || null,
             category: r["카테고리"] || "",
             tenant_code: r["테넌트코드"],
           }));
 
         if (inserts.length === 0) {
-          toast.error("유효한 데이터가 없습니다. 컬럼명을 확인해주세요. (점포, 브랜드명, 영문브랜드명, 카테고리, 테넌트코드)");
+          toast.error("유효한 데이터가 없습니다. 컬럼명을 확인해주세요. (점포, 브랜드명, 영문브랜드명, 중문브랜드명, 일문브랜드명, 카테고리, 테넌트코드)");
           return;
         }
 
@@ -96,10 +129,12 @@ const BrandsPage = () => {
   };
 
   const handleExport = () => {
-    const csv = Papa.unparse(brands.map((b) => ({
+    const csv = Papa.unparse(brands.map((b: any) => ({
       점포: b.store_name,
       브랜드명: b.brand_name,
       영문브랜드명: b.brand_name_en,
+      중문브랜드명: b.brand_name_zh || "",
+      일문브랜드명: b.brand_name_ja || "",
       카테고리: b.category,
       테넌트코드: b.tenant_code,
     })));
@@ -112,10 +147,12 @@ const BrandsPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const filtered = brands.filter((b) => {
+  const filtered = brands.filter((b: any) => {
     if (!search) return true;
     const s = search.toLowerCase();
-    return b.store_name.toLowerCase().includes(s) || b.brand_name.toLowerCase().includes(s) || b.brand_name_en.toLowerCase().includes(s);
+    return [b.store_name, b.brand_name, b.brand_name_en, b.brand_name_zh, b.brand_name_ja]
+      .filter(Boolean)
+      .some((v: string) => v.toLowerCase().includes(s));
   });
 
   return (
@@ -138,9 +175,9 @@ const BrandsPage = () => {
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { setEditing(null); resetForm(); }}><Plus className="w-4 h-4 mr-1" />추가</Button>
+              <Button onClick={() => { setEditing(null); setForm(emptyForm); }}><Plus className="w-4 h-4 mr-1" />추가</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editing ? "브랜드 수정" : "브랜드 추가"}</DialogTitle>
               </DialogHeader>
@@ -150,12 +187,20 @@ const BrandsPage = () => {
                   <Input value={form.store_name} onChange={(e) => setForm({ ...form, store_name: e.target.value })} placeholder="예: 여주점" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1">브랜드명 *</label>
+                  <label className="text-sm font-medium block mb-1">브랜드명 (한국어) *</label>
                   <Input value={form.brand_name} onChange={(e) => setForm({ ...form, brand_name: e.target.value })} placeholder="예: 구찌" />
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1">영문 브랜드명</label>
                   <Input value={form.brand_name_en} onChange={(e) => setForm({ ...form, brand_name_en: e.target.value })} placeholder="예: GUCCI" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1">중문 브랜드명</label>
+                  <Input value={form.brand_name_zh} onChange={(e) => setForm({ ...form, brand_name_zh: e.target.value })} placeholder="예: 古驰" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium block mb-1">일문 브랜드명</label>
+                  <Input value={form.brand_name_ja} onChange={(e) => setForm({ ...form, brand_name_ja: e.target.value })} placeholder="예: グッチ" />
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1">카테고리</label>
@@ -178,18 +223,22 @@ const BrandsPage = () => {
             <TableRow>
               <TableHead>점포</TableHead>
               <TableHead>브랜드명</TableHead>
-              <TableHead>영문명</TableHead>
+              <TableHead>EN</TableHead>
+              <TableHead>ZH</TableHead>
+              <TableHead>JA</TableHead>
               <TableHead>카테고리</TableHead>
               <TableHead>테넌트코드</TableHead>
               <TableHead className="w-24">관리</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((b) => (
+            {filtered.map((b: any) => (
               <TableRow key={b.id}>
                 <TableCell>{b.store_name}</TableCell>
                 <TableCell className="font-medium">{b.brand_name}</TableCell>
                 <TableCell>{b.brand_name_en}</TableCell>
+                <TableCell>{b.brand_name_zh || "-"}</TableCell>
+                <TableCell>{b.brand_name_ja || "-"}</TableCell>
                 <TableCell>{b.category}</TableCell>
                 <TableCell className="font-mono text-xs">{b.tenant_code}</TableCell>
                 <TableCell>
@@ -201,7 +250,7 @@ const BrandsPage = () => {
               </TableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">등록된 브랜드가 없습니다.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">등록된 브랜드가 없습니다.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

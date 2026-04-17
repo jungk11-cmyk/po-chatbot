@@ -8,21 +8,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import LanguageTabs from "@/components/admin/LanguageTabs";
+import { LangCode } from "@/contexts/LanguageContext";
 
 type Faq = Tables<"faq_keywords">;
 
 const FaqPage = () => {
+  const [lang, setLang] = useState<LangCode>("ko");
   const [faqs, setFaqs] = useState<Faq[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Faq | null>(null);
   const [form, setForm] = useState({ keyword: "", answer_html: "", sort_order: 0, search_keywords: "" });
 
   const load = async () => {
-    const { data } = await supabase.from("faq_keywords").select("*").order("sort_order");
+    const { data } = await supabase
+      .from("faq_keywords")
+      .select("*")
+      .eq("language", lang)
+      .order("sort_order");
     setFaqs(data || []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [lang]);
 
   const handleSave = async () => {
     if (!form.keyword.trim()) { toast.error("키워드를 입력해주세요."); return; }
@@ -30,7 +37,7 @@ const FaqPage = () => {
       await supabase.from("faq_keywords").update(form).eq("id", editing.id);
       toast.success("수정 완료");
     } else {
-      await supabase.from("faq_keywords").insert(form);
+      await supabase.from("faq_keywords").insert({ ...form, language: lang });
       toast.success("추가 완료");
     }
     setOpen(false);
@@ -54,8 +61,9 @@ const FaqPage = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold">FAQ 키워드 관리</h1>
+      <h1 className="text-xl font-bold mb-3">FAQ 키워드 관리</h1>
+      <LanguageTabs value={lang} onChange={setLang} />
+      <div className="flex items-center justify-end mb-4">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditing(null); setForm({ keyword: "", answer_html: "", sort_order: faqs.length, search_keywords: "" }); }}>
@@ -64,7 +72,7 @@ const FaqPage = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editing ? "FAQ 수정" : "FAQ 추가"}</DialogTitle>
+              <DialogTitle>{editing ? "FAQ 수정" : "FAQ 추가"} ({lang.toUpperCase()})</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
