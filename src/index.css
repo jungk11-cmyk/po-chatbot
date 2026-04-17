@@ -99,14 +99,14 @@
   }
   .chat-banner-card {
     background: var(--gradient-banner);
-    @apply text-[hsl(var(--chat-banner-foreground))] cursor-pointer rounded-xl px-4 py-3 text-sm font-medium shadow-[var(--shadow-banner)] border border-[hsl(var(--gold)/0.2)] hover:-translate-y-0.5 transition-[transform,box-shadow,background] duration-300;
+    @apply text-[hsl(var(--chat-banner-foreground))] cursor-pointer rounded-xl px-4 py-3 text-sm font-medium shadow-[var(--shadow-banner)] border border-white/10 hover:-translate-y-0.5 transition-[transform,box-shadow,background] duration-300;
   }
   .chat-banner-card:hover {
     background: var(--gradient-banner-hover);
-    box-shadow: 0 8px 20px -4px hsl(222 65% 14% / 0.4), 0 0 0 1px hsl(var(--gold) / 0.4);
+    box-shadow: 0 8px 20px -4px hsl(222 65% 14% / 0.4), 0 0 0 1px hsl(0 0% 100% / 0.25);
   }
   .faq-tag {
-    @apply bg-[hsl(var(--gold-light))] text-[hsl(var(--navy))] hover:bg-[hsl(var(--gold))] hover:text-[hsl(var(--chat-user-foreground))] hover:shadow-md transition-all cursor-pointer rounded-full px-3 py-1 text-xs font-medium border border-[hsl(var(--gold)/0.3)];
+    @apply bg-muted text-[hsl(var(--navy))] hover:bg-[hsl(var(--navy))] hover:text-white hover:shadow-md transition-all cursor-pointer rounded-full px-3 py-1 text-xs font-medium border border-border;
   }
   .gradient-header { background: var(--gradient-header); }
   .gradient-gold { background: var(--gradient-gold); }
