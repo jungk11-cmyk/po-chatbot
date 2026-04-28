@@ -9,7 +9,7 @@ import {
   getChildNodes,
   getNodeById,
   getFaqKeywords,
-  searchByKeyword,
+  askAgent,
 } from "@/lib/chatbot-engine";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useLanguage, UI_TEXTS } from "@/contexts/LanguageContext";
@@ -85,10 +85,16 @@ const ChatWindow = () => {
 
   const handleSend = async (text: string) => {
     addMessage({ id: crypto.randomUUID(), type: "user", content: text });
-    const results = await searchByKeyword(text, language, {
-      aiEnabled: settings.ai_router_enabled,
-      aiModel: settings.ai_model,
-    });
+
+    // Typing indicator
+    const typingId = crypto.randomUUID();
+    addMessage({ id: typingId, type: "bot", content: t.thinking || "..." });
+
+    const results = await askAgent(text, language, { aiModel: settings.ai_model });
+
+    // Remove typing indicator
+    setMessages((prev) => prev.filter((m) => m.id !== typingId));
+
     if (results.length > 0) {
       results.forEach((msg) => addMessage(msg));
     } else {
@@ -97,15 +103,6 @@ const ChatWindow = () => {
         type: "bot",
         content: settings.no_result_message.replace(/\\n/g, "\n"),
       });
-      const cats = await getCategories(language);
-      if (cats.length > 0) {
-        addMessage({
-          id: crypto.randomUUID(),
-          type: "bot",
-          content: "",
-          banners: cats.map((c) => ({ id: c.id, name: c.name, icon: c.icon || undefined })),
-        });
-      }
     }
   };
 

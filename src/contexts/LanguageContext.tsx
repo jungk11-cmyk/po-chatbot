@@ -43,6 +43,7 @@ export const UI_TEXTS: Record<LangCode, {
   inputPlaceholder: string;
   send: string;
   defaultNoResult: string;
+  thinking: string;
 }> = {
   ko: {
     welcome: "안녕하세요! 신세계사이먼 프리미엄 아울렛입니다.\n아래 항목 중 문의사항을 선택해주세요.",
@@ -57,6 +58,7 @@ export const UI_TEXTS: Record<LangCode, {
     inputPlaceholder: "메시지를 입력하세요...",
     send: "전송",
     defaultNoResult: "죄송합니다. 관련 내용을 찾을 수 없습니다.\n아래 카테고리에서 원하시는 항목을 선택해주세요.",
+    thinking: "답변을 작성 중입니다...",
   },
   en: {
     welcome: "Hello! Welcome to Shinsegae Simon Premium Outlets.\nPlease select an inquiry below.",
@@ -71,6 +73,7 @@ export const UI_TEXTS: Record<LangCode, {
     inputPlaceholder: "Type a message...",
     send: "Send",
     defaultNoResult: "Sorry, no related content was found.\nPlease select an item from the categories below.",
+    thinking: "Composing a response...",
   },
   zh: {
     welcome: "您好!欢迎来到新世界西蒙名牌奥特莱斯。\n请从下方选择咨询事项。",
@@ -85,6 +88,7 @@ export const UI_TEXTS: Record<LangCode, {
     inputPlaceholder: "输入消息...",
     send: "发送",
     defaultNoResult: "抱歉,未找到相关内容。\n请从下方分类中选择您需要的项目。",
+    thinking: "正在生成回答...",
   },
   ja: {
     welcome: "こんにちは!新世界サイモン・プレミアムアウトレットです。\n以下の項目からお問い合わせ内容をお選びください。",
@@ -99,5 +103,6 @@ export const UI_TEXTS: Record<LangCode, {
     inputPlaceholder: "メッセージを入力...",
     send: "送信",
     defaultNoResult: "申し訳ございません。関連する内容が見つかりませんでした。\n以下のカテゴリからご希望の項目をお選びください。",
+    thinking: "回答を作成中...",
   },
 };
