@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Upload, Save, Sparkles } from "lucide-react";
 import LanguageTabs from "@/components/admin/LanguageTabs";
@@ -12,6 +11,7 @@ const AI_MODELS = [
   { value: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (빠름·저렴, 기본)" },
   { value: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (가장 빠름)" },
   { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (균형)" },
+  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (정확도 최고)" },
   { value: "openai/gpt-5-nano", label: "GPT-5 Nano (빠름)" },
   { value: "openai/gpt-5-mini", label: "GPT-5 Mini (정확도 높음)" },
 ];
@@ -23,9 +23,9 @@ const SettingsPage = () => {
   const [logoUrl, setLogoUrl] = useState("");
   const [noResultMessage, setNoResultMessage] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(false);
   const [aiModel, setAiModel] = useState("google/gemini-3-flash-preview");
   const [savingAi, setSavingAi] = useState(false);
 
@@ -38,20 +38,15 @@ const SettingsPage = () => {
     const { data } = await supabase
       .from("site_settings")
       .select("key, value")
-      .in("key", ["ai_router_enabled", "ai_model"]);
+      .in("key", ["ai_model"]);
     const map: Record<string, string> = {};
     data?.forEach((row: any) => { map[row.key] = row.value; });
-    setAiEnabled(map.ai_router_enabled === "true");
     setAiModel(map.ai_model || "google/gemini-3-flash-preview");
   };
 
   const handleSaveAi = async () => {
     setSavingAi(true);
     try {
-      await supabase.from("site_settings").upsert(
-        { key: "ai_router_enabled", value: aiEnabled ? "true" : "false", language: "ko" },
-        { onConflict: "key,language" }
-      );
       await supabase.from("site_settings").upsert(
         { key: "ai_model", value: aiModel, language: "ko" },
         { onConflict: "key,language" }
@@ -78,6 +73,7 @@ const SettingsPage = () => {
     setLogoUrl(map.bot_logo_url || "");
     setNoResultMessage(map.no_result_message || "");
     setWelcomeMessage(map.welcome_message || "");
+    setCustomerPhone(map.customer_service_phone || "");
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,9 +104,9 @@ const SettingsPage = () => {
         { key: "bot_logo_url", value: logoUrl },
         { key: "no_result_message", value: noResultMessage },
         { key: "welcome_message", value: welcomeMessage },
+        { key: "customer_service_phone", value: customerPhone },
       ];
       for (const u of updates) {
-        // upsert by (key, language)
         await supabase
           .from("site_settings")
           .upsert({ key: u.key, value: u.value, language: lang }, { onConflict: "key,language" });
@@ -127,7 +123,7 @@ const SettingsPage = () => {
     <div className="max-w-xl">
       <h1 className="text-xl font-bold mb-3">관리자 설정</h1>
       <LanguageTabs value={lang} onChange={setLang} />
-      <p className="text-xs text-muted-foreground mb-4">언어별로 챗봇 이름, 부제, 안내 문구 등을 각각 설정할 수 있습니다.</p>
+      <p className="text-xs text-muted-foreground mb-4">언어별로 챗봇 이름, 부제, 안내 문구, 고객센터 번호를 각각 설정할 수 있습니다.</p>
       <div className="space-y-6">
         <div>
           <label className="text-sm font-medium block mb-2">챗봇 로고</label>
@@ -189,46 +185,52 @@ const SettingsPage = () => {
           />
         </div>
 
+        <div>
+          <label className="text-sm font-medium block mb-1">
+            고객센터 번호 <span className="text-destructive">*</span>
+          </label>
+          <Input
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="예: 1577-0000"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            AI가 답변할 수 없거나 확신이 없을 때 안내할 고객센터 번호입니다. 언어별로 설정 가능합니다.
+          </p>
+        </div>
+
         <Button onClick={handleSave} disabled={saving} className="w-full">
           <Save className="w-4 h-4 mr-1" />
           {saving ? "저장 중..." : `${lang.toUpperCase()} 설정 저장`}
         </Button>
       </div>
 
-      {/* AI Intent Router Section (global, language-independent) */}
+      {/* AI Agent Section (global, language-independent) */}
       <div className="mt-10 pt-6 border-t">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-5 h-5 text-[hsl(var(--navy))]" />
-          <h2 className="text-lg font-bold">AI 의도 분류 (전역 설정)</h2>
+          <h2 className="text-lg font-bold">AI 챗봇 설정 (전역)</h2>
         </div>
         <p className="text-xs text-muted-foreground mb-4">
-          켜면 사용자 질문을 AI가 분석해서 키워드 매칭된 여러 답변 중 <strong>가장 적합한 1~2개만</strong> 보여줍니다.
-          꺼지면 키워드 매칭된 모든 결과를 보여줍니다. AI는 답변을 새로 생성하지 않고 기존 시나리오/FAQ에서 고르기만 합니다.
+          AI가 등록된 <strong>FAQ, 시나리오, 브랜드 정보</strong>를 바탕으로 고객 질문의 의도를 파악하고 자연스럽게 엮어 답변합니다.
+          답변은 <strong>반드시 등록된 자료에만 근거</strong>하며, 답할 수 없는 질문은 자동으로 고객센터로 안내됩니다.
         </p>
 
         <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium block">AI 의도 분류 사용</label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                예: "1주차 여주점 영업시간" → AI가 영업시간 답변만 골라줍니다.
-              </p>
-            </div>
-            <Switch checked={aiEnabled} onCheckedChange={setAiEnabled} />
-          </div>
-
           <div>
             <label className="text-sm font-medium block mb-1">AI 모델</label>
             <select
               value={aiModel}
               onChange={(e) => setAiModel(e.target.value)}
-              disabled={!aiEnabled}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {AI_MODELS.map((m) => (
                 <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              빠르고 저렴한 모델은 단순 질문에, 정확도 높은 모델은 복합 질문에 적합합니다.
+            </p>
           </div>
 
           <Button onClick={handleSaveAi} disabled={savingAi} variant="secondary" className="w-full">
