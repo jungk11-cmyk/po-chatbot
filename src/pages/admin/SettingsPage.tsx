@@ -2,10 +2,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Upload, Save } from "lucide-react";
+import { Upload, Save, Sparkles } from "lucide-react";
 import LanguageTabs from "@/components/admin/LanguageTabs";
 import { LangCode } from "@/contexts/LanguageContext";
+
+const AI_MODELS = [
+  { value: "google/gemini-3-flash-preview", label: "Gemini 3 Flash (빠름·저렴, 기본)" },
+  { value: "google/gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (가장 빠름)" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (균형)" },
+  { value: "openai/gpt-5-nano", label: "GPT-5 Nano (빠름)" },
+  { value: "openai/gpt-5-mini", label: "GPT-5 Mini (정확도 높음)" },
+];
 
 const SettingsPage = () => {
   const [lang, setLang] = useState<LangCode>("ko");
@@ -16,10 +25,44 @@ const SettingsPage = () => {
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiModel, setAiModel] = useState("google/gemini-3-flash-preview");
+  const [savingAi, setSavingAi] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    loadAiSettings();
   }, [lang]);
+
+  const loadAiSettings = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["ai_router_enabled", "ai_model"]);
+    const map: Record<string, string> = {};
+    data?.forEach((row: any) => { map[row.key] = row.value; });
+    setAiEnabled(map.ai_router_enabled === "true");
+    setAiModel(map.ai_model || "google/gemini-3-flash-preview");
+  };
+
+  const handleSaveAi = async () => {
+    setSavingAi(true);
+    try {
+      await supabase.from("site_settings").upsert(
+        { key: "ai_router_enabled", value: aiEnabled ? "true" : "false", language: "ko" },
+        { onConflict: "key,language" }
+      );
+      await supabase.from("site_settings").upsert(
+        { key: "ai_model", value: aiModel, language: "ko" },
+        { onConflict: "key,language" }
+      );
+      toast.success("AI 설정이 저장되었습니다.");
+    } catch (err: any) {
+      toast.error("저장 실패: " + err.message);
+    } finally {
+      setSavingAi(false);
+    }
+  };
 
   const loadSettings = async () => {
     const { data } = await supabase
