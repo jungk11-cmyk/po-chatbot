@@ -1,5 +1,7 @@
-// AI intent classifier - picks the most relevant candidates for a user query
-// Does NOT generate answers; only selects which pre-written items to display.
+// Chatbot AI agent — understands user intent, reads DB content (FAQ + scenarios + brands),
+// composes a natural answer grounded ONLY in DB sources. If unsure, redirects to customer service.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,12 +9,32 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface Candidate {
-  id: string;
-  type: "faq" | "scenario";
-  title: string;
-  snippet?: string;
-}
+const htmlToText = (html: string): string =>
+  (html || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const normalize = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+
+const STORE_CODE_MAP: Record<string, string> = {
+  "여주점": "01",
+  "파주점": "02",
+  "부산점": "03",
+  "시흥점": "05",
+  "제주점": "06",
+};
+
+const LANG_NAME: Record<string, string> = {
+  ko: "Korean (한국어)",
+  en: "English",
+  zh: "Chinese (中文)",
+  ja: "Japanese (日本語)",
+};
+
+const FALLBACK_MSG: Record<string, (phone: string) => string> = {
+  ko: (p) => `죄송합니다. 일시적으로 답변을 드리기 어렵습니다.${p ? ` 자세한 내용은 고객센터(${p})로 문의해 주세요.` : " 잠시 후 다시 시도해 주세요."}`,
+  en: (p) => `Sorry, we're temporarily unable to respond.${p ? ` Please contact our customer service center (${p}) for assistance.` : " Please try again shortly."}`,
+  zh: (p) => `抱歉，暂时无法回复。${p ? `详情请联系客服中心 (${p})。` : "请稍后再试。"}`,
+  ja: (p) => `申し訳ございません。一時的にご回答できません。${p ? `詳細はカスタマーセンター（${p}）までお問い合わせください。` : "しばらくしてから再度お試しください。"}`,
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,67 +42,117 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userMessage, candidates, language, model } = await req.json() as {
+    const { userMessage, language, model } = await req.json() as {
       userMessage: string;
-      candidates: Candidate[];
       language?: string;
       model?: string;
     };
 
-    if (!userMessage || !Array.isArray(candidates) || candidates.length === 0) {
+    if (!userMessage || typeof userMessage !== "string") {
       return new Response(
-        JSON.stringify({ error: "userMessage and candidates required" }),
+        JSON.stringify({ error: "userMessage required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const lang = language || "ko";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Load customer service phone (per language, fallback ko)
+    const { data: phoneRows } = await supabase
+      .from("site_settings")
+      .select("value, language")
+      .eq("key", "customer_service_phone");
+    const phoneMap: Record<string, string> = {};
+    phoneRows?.forEach((r: any) => { phoneMap[r.language] = r.value; });
+    const customerPhone = phoneMap[lang] || phoneMap["ko"] || "";
+
     if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          answer_html: FALLBACK_MSG[lang]?.(customerPhone) || FALLBACK_MSG.ko(customerPhone),
+          confidence: "none",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Load FAQ + scenarios in parallel
+    const [{ data: faqs }, { data: nodes }, { data: brands }] = await Promise.all([
+      supabase
+        .from("faq_keywords")
+        .select("keyword, search_keywords, answer_html")
+        .eq("is_active", true)
+        .eq("language", lang),
+      supabase
+        .from("scenario_nodes")
+        .select("label, keywords, answer_html")
+        .eq("is_active", true)
+        .eq("language", lang)
+        .not("answer_html", "is", null),
+      supabase
+        .from("brand_tenants")
+        .select("brand_name, brand_name_en, brand_name_zh, brand_name_ja, store_name, category, tenant_code")
+        .eq("is_active", true),
+    ]);
+
+    // Pre-filter brands by name match in user message (any language)
+    const normInput = normalize(userMessage);
+    const matchedBrands = (brands || []).filter((b: any) => {
+      const names = [b.brand_name, b.brand_name_en, b.brand_name_zh, b.brand_name_ja].filter(Boolean);
+      return names.some((n: string) => normInput.includes(normalize(n)));
+    });
+
+    // Build context blocks
+    const faqBlock = (faqs || []).map((f: any, i: number) => {
+      const kws = [f.keyword, f.search_keywords].filter(Boolean).join(" / ");
+      return `[FAQ-${i + 1}] keyword: ${kws}\nanswer: ${htmlToText(f.answer_html)}`;
+    }).join("\n\n");
+
+    const scenarioBlock = (nodes || []).map((n: any, i: number) => {
+      const kws = [n.label, n.keywords].filter(Boolean).join(" / ");
+      return `[SCENARIO-${i + 1}] topic: ${kws}\nanswer: ${htmlToText(n.answer_html)}`;
+    }).join("\n\n");
+
+    const brandBlock = matchedBrands.map((b: any, i: number) => {
+      const sc = STORE_CODE_MAP[b.store_name] || "00";
+      const url = `https://app.premiumoutlets.co.kr/rpage/store/brand/category-view/${b.tenant_code}/${sc}`;
+      return `[BRAND-${i + 1}] ${b.brand_name} (${b.brand_name_en || ""}) — store: ${b.store_name}, category: ${b.category}, link: ${url}`;
+    }).join("\n");
+
+    const systemPrompt = `You are the official customer support chatbot for Shinsegae Simon Premium Outlets in Korea.
+
+ABSOLUTE RULES:
+1. Answer ONLY using facts from the SOURCES below. NEVER invent prices, hours, phone numbers, addresses, brand details, or any other facts not present in the sources.
+2. If the sources don't contain the answer, OR you're not 100% sure, tell the user politely and direct them to the customer service center${customerPhone ? ` (phone: ${customerPhone})` : ""}.
+3. If the user asks about a brand AND a related topic (like hours, parking, location), combine the brand info from BRAND sources with the topic info from FAQ/SCENARIO sources naturally. When combining, ALWAYS clarify that information like brand-specific operating hours may differ from the mall's general hours and ask them to confirm with customer service for exact details.
+4. Reply in ${LANG_NAME[lang] || "Korean"}.
+5. Format the answer as clean HTML (use <br/> for line breaks, <strong> for emphasis, <a href="..." target="_blank"> for links). No markdown.
+6. Keep answers concise, friendly, and helpful. Don't dump entire source texts — extract what's relevant.
+7. If a brand was matched, include its store link in the answer.
+${customerPhone ? `8. Customer service phone (use this exact number when referring users): ${customerPhone}` : ""}
+
+=== SOURCES ===
+
+--- FAQ ---
+${faqBlock || "(none)"}
+
+--- SCENARIOS ---
+${scenarioBlock || "(none)"}
+
+--- MATCHED BRANDS (mentioned in user's question) ---
+${brandBlock || "(none)"}
+
+=== END SOURCES ===`;
+
     const chosenModel = model || "google/gemini-3-flash-preview";
 
-    const candidateList = candidates
-      .map(
-        (c, i) =>
-          `[${i + 1}] id="${c.id}" type=${c.type} title="${c.title}"${
-            c.snippet ? ` snippet="${c.snippet.slice(0, 200)}"` : ""
-          }`
-      )
-      .join("\n");
-
-    const systemPrompt = `You are an intent classifier for a customer support chatbot at a Korean premium outlet mall.
-The user asked a question. Below is a list of candidate answers (FAQ/scenarios written by admins).
-
-Your job: infer what the user ACTUALLY wants to know — even if they don't use the exact wording — and pick the candidate(s) that answer it.
-
-CRITICAL — Read intent semantically, not literally:
-- "10시에도 영업해?" / "지금 문 열었어?" / "몇 시까지 해?" / "오픈시간" / "운영시간" / "마감시간" → all mean **영업시간 (business hours)**
-- "주차 되나요?" / "차 가져가도 돼?" / "주차장 있어요?" → **주차 (parking)**
-- "어떻게 가요?" / "위치가 어디?" / "찾아가는 길" → **오시는 길 / 위치 (directions/location)**
-- A question implying a specific time, day, or condition about opening (e.g. "10시에 영업해?", "일요일에 열어?", "공휴일도 해?") is almost always a **business hours** question — pick the 영업시간 candidate.
-- Questions about whether a service/facility exists or is available are usually answered by the corresponding info FAQ.
-
-Rules:
-- Return candidate ids EXACTLY as given.
-- Pick 1 candidate that best matches the user's true intent. Pick 2 only if the question clearly has multiple distinct parts.
-- Only return an empty array if NO candidate is reasonably related to the user's intent (e.g., user asks about food but candidates are all about parking and shuttles).
-- Prefer giving a helpful answer over being overly strict — if a candidate plausibly answers what the user wants to know, include it.
-- Reply language hint: ${language || "ko"}.`;
-
-    const userPrompt = `User question: "${userMessage}"
-
-Candidates:
-${candidateList}
-
-Think about what the user really wants to know (semantically, not just keyword match), then pick the candidate id(s) that best answer it.`;
-
     const aiController = new AbortController();
-    const timeoutId = setTimeout(() => aiController.abort(), 8000);
+    const timeoutId = setTimeout(() => aiController.abort(), 15000);
 
     const aiResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -95,34 +167,34 @@ Think about what the user really wants to know (semantically, not just keyword m
           model: chosenModel,
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
+            { role: "user", content: userMessage },
           ],
           tools: [
             {
               type: "function",
               function: {
-                name: "select_candidates",
-                description: "Return the ids of the candidates that best match the user's intent.",
+                name: "respond_to_user",
+                description: "Provide the chatbot's answer to the user.",
                 parameters: {
                   type: "object",
                   properties: {
-                    selected_ids: {
-                      type: "array",
-                      items: { type: "string" },
-                      description: "Candidate ids that best match. Empty if none match.",
-                    },
-                    reason: {
+                    answer_html: {
                       type: "string",
-                      description: "Short reason for the selection (for debugging).",
+                      description: "The answer to show the user, formatted as HTML. Reply in the user's language.",
+                    },
+                    confidence: {
+                      type: "string",
+                      enum: ["high", "partial", "none"],
+                      description: "high = fully answered from sources; partial = some info from sources, some uncertain (mention customer service); none = no relevant source, redirect to customer service.",
                     },
                   },
-                  required: ["selected_ids", "reason"],
+                  required: ["answer_html", "confidence"],
                   additionalProperties: false,
                 },
               },
             },
           ],
-          tool_choice: { type: "function", function: { name: "select_candidates" } },
+          tool_choice: { type: "function", function: { name: "respond_to_user" } },
         }),
       }
     );
@@ -132,38 +204,49 @@ Think about what the user really wants to know (semantically, not just keyword m
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
+      const status = aiResponse.status === 429 || aiResponse.status === 402 ? aiResponse.status : 200;
       return new Response(
-        JSON.stringify({ error: "ai_gateway_error", status: aiResponse.status }),
-        {
-          status: aiResponse.status === 429 || aiResponse.status === 402 ? aiResponse.status : 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({
+          answer_html: FALLBACK_MSG[lang]?.(customerPhone) || FALLBACK_MSG.ko(customerPhone),
+          confidence: "none",
+          error: aiResponse.status === 429 ? "rate_limited" : aiResponse.status === 402 ? "payment_required" : "ai_error",
+        }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await aiResponse.json();
     const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall) {
+      const fallbackText = data?.choices?.[0]?.message?.content;
       return new Response(
-        JSON.stringify({ error: "no_tool_call", raw: data }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          answer_html: fallbackText || FALLBACK_MSG[lang]?.(customerPhone) || FALLBACK_MSG.ko(customerPhone),
+          confidence: "none",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const args = JSON.parse(toolCall.function.arguments);
-    const validIds = new Set(candidates.map((c) => c.id));
-    const selected_ids: string[] = (args.selected_ids || []).filter((id: string) => validIds.has(id));
-
     return new Response(
-      JSON.stringify({ selected_ids, reason: args.reason || "" }),
+      JSON.stringify({
+        answer_html: args.answer_html || FALLBACK_MSG[lang]?.(customerPhone) || FALLBACK_MSG.ko(customerPhone),
+        confidence: args.confidence || "none",
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     const isAbort = e instanceof Error && e.name === "AbortError";
-    console.error("intent-router error:", e);
+    console.error("chatbot-agent error:", e);
+    const lang = "ko";
     return new Response(
-      JSON.stringify({ error: isAbort ? "timeout" : (e instanceof Error ? e.message : "unknown") }),
-      { status: isAbort ? 504 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        answer_html: FALLBACK_MSG[lang](""),
+        confidence: "none",
+        error: isAbort ? "timeout" : (e instanceof Error ? e.message : "unknown"),
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
