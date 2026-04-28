@@ -8,6 +8,8 @@ export interface SiteSettings {
   bot_logo_url: string;
   no_result_message: string;
   welcome_message: string;
+  ai_router_enabled: boolean;
+  ai_model: string;
 }
 
 const buildDefaults = (lang: LangCode): SiteSettings => ({
@@ -23,6 +25,8 @@ const buildDefaults = (lang: LangCode): SiteSettings => ({
   bot_logo_url: "",
   no_result_message: UI_TEXTS[lang].defaultNoResult,
   welcome_message: UI_TEXTS[lang].welcome,
+  ai_router_enabled: false,
+  ai_model: "google/gemini-3-flash-preview",
 });
 
 export function useSiteSettings(lang: LangCode = "ko") {
@@ -32,22 +36,32 @@ export function useSiteSettings(lang: LangCode = "ko") {
   const load = async () => {
     setLoading(true);
     const defaults = buildDefaults(lang);
-    const { data } = await supabase
+
+    // Per-language settings
+    const { data: langData } = await supabase
       .from("site_settings")
       .select("key, value, language")
       .eq("language", lang);
+
+    // Global AI settings (stored under language='ko')
+    const { data: aiData } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", ["ai_router_enabled", "ai_model"]);
+
     const map: Record<string, string> = {};
-    if (data) {
-      data.forEach((row: { key: string; value: string }) => {
-        map[row.key] = row.value;
-      });
-    }
+    langData?.forEach((row: any) => { map[row.key] = row.value; });
+    // AI keys overwrite (global, last write wins; all langs share)
+    aiData?.forEach((row: any) => { map[row.key] = row.value; });
+
     setSettings({
       bot_name: map.bot_name || defaults.bot_name,
       bot_subtitle: map.bot_subtitle || defaults.bot_subtitle,
       bot_logo_url: map.bot_logo_url || defaults.bot_logo_url,
       no_result_message: map.no_result_message || defaults.no_result_message,
       welcome_message: map.welcome_message || defaults.welcome_message,
+      ai_router_enabled: map.ai_router_enabled === "true",
+      ai_model: map.ai_model || defaults.ai_model,
     });
     setLoading(false);
   };
