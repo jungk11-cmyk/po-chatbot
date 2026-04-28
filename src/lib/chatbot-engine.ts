@@ -213,6 +213,106 @@ export interface SearchOptions {
   aiModel?: string;
 }
 
+/**
+ * Collect ALL active FAQ + Scenario items as candidates (no keyword filter).
+ * Used as semantic fallback when keyword matching returns nothing.
+ */
+async function collectAllItems(
+  lang: LangCode,
+  t: typeof UI_TEXTS[LangCode]
+): Promise<Candidate[]> {
+  const out: Candidate[] = [];
+
+  const { data: faqs } = await supabase
+    .from("faq_keywords")
+    .select("*")
+    .eq("is_active", true)
+    .eq("language", lang);
+
+  if (faqs) {
+    for (const faq of faqs) {
+      const cid = crypto.randomUUID();
+      const titleParts = [faq.keyword];
+      const sk = (faq as any).search_keywords;
+      if (sk) titleParts.push(sk);
+      out.push({
+        id: cid,
+        type: "faq",
+        title: titleParts.join(" / "),
+        snippet: htmlToText(faq.answer_html),
+        message: {
+          id: cid,
+          type: "bot",
+          content: faq.answer_html,
+          isHtml: true,
+        },
+      });
+    }
+  }
+
+  const { data: nodes } = await supabase
+    .from("scenario_nodes")
+    .select("*")
+    .eq("is_active", true)
+    .eq("language", lang);
+
+  if (nodes) {
+    for (const node of nodes) {
+      // Only consider answerable nodes or branching nodes for semantic fallback
+      if (!node.answer_html) continue;
+      const cid = crypto.randomUUID();
+      const titleParts = [node.label];
+      if (node.keywords) titleParts.push(node.keywords);
+      out.push({
+        id: cid,
+        type: "scenario",
+        title: titleParts.join(" / "),
+        snippet: htmlToText(node.answer_html),
+        message: {
+          id: cid,
+          type: "bot",
+          content: node.answer_html,
+          isHtml: true,
+        },
+      });
+    }
+  }
+
+  return out;
+}
+
+async function runIntentRouter(
+  input: string,
+  lang: LangCode,
+  model: string | undefined,
+  candidates: Candidate[]
+): Promise<Candidate[] | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("intent-router", {
+      body: {
+        userMessage: input,
+        language: lang,
+        model,
+        candidates: candidates.map((c) => ({
+          id: c.id,
+          type: c.type,
+          title: c.title,
+          snippet: c.snippet,
+        })),
+      },
+    });
+
+    if (error || !data || !Array.isArray(data.selected_ids)) return null;
+    const selectedIds: string[] = data.selected_ids;
+    if (selectedIds.length === 0) return [];
+    const idSet = new Set(selectedIds);
+    return candidates.filter((c) => idSet.has(c.id));
+  } catch (e) {
+    console.warn("intent-router failed", e);
+    return null;
+  }
+}
+
 export async function searchByKeyword(
   input: string,
   lang: LangCode = "ko",
@@ -228,38 +328,28 @@ export async function searchByKeyword(
 
   let chosen: ChatMessage[] = candidates.map((c) => c.message);
 
-  // AI router only kicks in for 2+ candidates
+  // Case 1: 2+ keyword candidates → AI narrows down
   if (options.aiEnabled && candidates.length >= 2) {
-    try {
-      const { data, error } = await supabase.functions.invoke("intent-router", {
-        body: {
-          userMessage: input,
-          language: lang,
-          model: options.aiModel,
-          candidates: candidates.map((c) => ({
-            id: c.id,
-            type: c.type,
-            title: c.title,
-            snippet: c.snippet,
-          })),
-        },
-      });
+    const filtered = await runIntentRouter(input, lang, options.aiModel, candidates);
+    if (filtered && filtered.length > 0) {
+      chosen = filtered.map((c) => c.message);
+    }
+    // null/empty → keep all candidates (don't drop user)
+  }
 
-      if (!error && data && Array.isArray(data.selected_ids)) {
-        const selectedIds: string[] = data.selected_ids;
-        if (selectedIds.length > 0) {
-          const idSet = new Set(selectedIds);
-          const filtered = candidates
-            .filter((c) => idSet.has(c.id))
-            .map((c) => c.message);
-          if (filtered.length > 0) {
-            chosen = filtered;
-          }
-        }
-        // If AI returned empty array, fall back to all candidates (don't drop user)
+  // Case 2: 0 keyword candidates AND no brand match → semantic fallback
+  // AI scans ALL FAQ/scenarios to find a meaningful match (e.g. "운영시간" → "영업시간")
+  if (
+    options.aiEnabled &&
+    candidates.length === 0 &&
+    brandMessages.length === 0
+  ) {
+    const allItems = await collectAllItems(lang, t);
+    if (allItems.length > 0) {
+      const semantic = await runIntentRouter(input, lang, options.aiModel, allItems);
+      if (semantic && semantic.length > 0) {
+        chosen = semantic.map((c) => c.message);
       }
-    } catch (e) {
-      console.warn("intent-router failed, falling back to all candidates", e);
     }
   }
 
