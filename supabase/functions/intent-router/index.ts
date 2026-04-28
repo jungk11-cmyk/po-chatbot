@@ -53,16 +53,23 @@ Deno.serve(async (req) => {
       )
       .join("\n");
 
-    const systemPrompt = `You are an intent classifier for a customer support chatbot.
-The user asked a question. Below is a list of candidate answers that were retrieved by keyword matching.
-Some candidates may be only loosely related due to overlapping keywords (e.g., a query about "store hours" might also match "parking" if both keywords appear).
+    const systemPrompt = `You are an intent classifier for a customer support chatbot at a Korean premium outlet mall.
+The user asked a question. Below is a list of candidate answers (FAQ/scenarios written by admins).
 
-Your job: pick ONLY the candidates that genuinely answer the user's PRIMARY intent. Usually 1, occasionally 2 if the question clearly has multiple parts.
+Your job: infer what the user ACTUALLY wants to know — even if they don't use the exact wording — and pick the candidate(s) that answer it.
+
+CRITICAL — Read intent semantically, not literally:
+- "10시에도 영업해?" / "지금 문 열었어?" / "몇 시까지 해?" / "오픈시간" / "운영시간" / "마감시간" → all mean **영업시간 (business hours)**
+- "주차 되나요?" / "차 가져가도 돼?" / "주차장 있어요?" → **주차 (parking)**
+- "어떻게 가요?" / "위치가 어디?" / "찾아가는 길" → **오시는 길 / 위치 (directions/location)**
+- A question implying a specific time, day, or condition about opening (e.g. "10시에 영업해?", "일요일에 열어?", "공휴일도 해?") is almost always a **business hours** question — pick the 영업시간 candidate.
+- Questions about whether a service/facility exists or is available are usually answered by the corresponding info FAQ.
 
 Rules:
 - Return candidate ids EXACTLY as given.
-- If NONE of the candidates truly match the user's intent, return an empty array.
-- Prefer fewer, more precise matches over many loose matches.
+- Pick 1 candidate that best matches the user's true intent. Pick 2 only if the question clearly has multiple distinct parts.
+- Only return an empty array if NO candidate is reasonably related to the user's intent (e.g., user asks about food but candidates are all about parking and shuttles).
+- Prefer giving a helpful answer over being overly strict — if a candidate plausibly answers what the user wants to know, include it.
 - Reply language hint: ${language || "ko"}.`;
 
     const userPrompt = `User question: "${userMessage}"
@@ -70,7 +77,7 @@ Rules:
 Candidates:
 ${candidateList}
 
-Pick the candidate ids that best match the user's primary intent.`;
+Think about what the user really wants to know (semantically, not just keyword match), then pick the candidate id(s) that best answer it.`;
 
     const aiController = new AbortController();
     const timeoutId = setTimeout(() => aiController.abort(), 8000);
