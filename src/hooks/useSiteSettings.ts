@@ -8,7 +8,7 @@ export interface SiteSettings {
   bot_logo_url: string;
   no_result_message: string;
   welcome_message: string;
-  ai_router_enabled: boolean;
+  customer_service_phone: string;
   ai_model: string;
 }
 
@@ -25,7 +25,7 @@ const buildDefaults = (lang: LangCode): SiteSettings => ({
   bot_logo_url: "",
   no_result_message: UI_TEXTS[lang].defaultNoResult,
   welcome_message: UI_TEXTS[lang].welcome,
-  ai_router_enabled: false,
+  customer_service_phone: "",
   ai_model: "google/gemini-3-flash-preview",
 });
 
@@ -43,15 +43,14 @@ export function useSiteSettings(lang: LangCode = "ko") {
       .select("key, value, language")
       .eq("language", lang);
 
-    // Global AI settings (stored under language='ko')
+    // Global AI model (stored under language='ko')
     const { data: aiData } = await supabase
       .from("site_settings")
       .select("key, value")
-      .in("key", ["ai_router_enabled", "ai_model"]);
+      .in("key", ["ai_model"]);
 
     const map: Record<string, string> = {};
     langData?.forEach((row: any) => { map[row.key] = row.value; });
-    // AI keys overwrite (global, last write wins; all langs share)
     aiData?.forEach((row: any) => { map[row.key] = row.value; });
 
     setSettings({
@@ -60,7 +59,7 @@ export function useSiteSettings(lang: LangCode = "ko") {
       bot_logo_url: map.bot_logo_url || defaults.bot_logo_url,
       no_result_message: map.no_result_message || defaults.no_result_message,
       welcome_message: map.welcome_message || defaults.welcome_message,
-      ai_router_enabled: map.ai_router_enabled === "true",
+      customer_service_phone: map.customer_service_phone || defaults.customer_service_phone,
       ai_model: map.ai_model || defaults.ai_model,
     });
     setLoading(false);
