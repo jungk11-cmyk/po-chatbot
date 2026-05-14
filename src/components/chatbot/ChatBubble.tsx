@@ -16,6 +16,23 @@ const ChatBubble = ({ message, onButtonClick, onBannerClick }: Props) => {
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         )}
 
+        {message.linkButtons && message.linkButtons.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.linkButtons.map((lb, i) => (
+              <a
+                key={i}
+                href={lb.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 bg-white hover:bg-[hsl(var(--navy))] text-[hsl(var(--navy))] hover:text-white text-xs font-semibold px-3.5 py-1.5 rounded-full border border-[hsl(var(--navy)/0.2)] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+              >
+                {lb.label}
+                <span aria-hidden="true">↗</span>
+              </a>
+            ))}
+          </div>
+        )}
+
         {message.banners && message.banners.length > 0 && (
           <div className="mt-3 grid grid-cols-2 gap-2">
             {message.banners.map((b) => (
