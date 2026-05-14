@@ -202,10 +202,6 @@ const ScenariosPage = () => {
               <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">검색 인식 키워드 (쉼표로 구분)</label>
-              <Input value={form.keywords} onChange={(e) => setForm({ ...form, keywords: e.target.value })} placeholder="예: 여주점 운영시간, 여주 영업시간" />
-            </div>
-            <div>
               <label className="text-sm font-medium block mb-1">정렬 순서</label>
               <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
             </div>
