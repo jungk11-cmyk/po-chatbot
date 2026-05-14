@@ -66,7 +66,14 @@ const ChatWindow = () => {
     if (!node) return;
 
     if (node.answer_html) {
-      addMessage({ id: crypto.randomUUID(), type: "bot", content: node.answer_html, isHtml: true });
+      const lb = Array.isArray((node as any).link_buttons) ? (node as any).link_buttons : [];
+      addMessage({
+        id: crypto.randomUUID(),
+        type: "bot",
+        content: node.answer_html,
+        isHtml: true,
+        linkButtons: lb,
+      });
       return;
     }
 
