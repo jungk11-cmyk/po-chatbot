@@ -139,7 +139,6 @@ const ScenariosPage = () => {
           <FileText className="w-4 h-4 text-muted-foreground" />
         )}
         <span className="flex-1 text-sm font-medium">{node.label}</span>
-        {node.keywords && <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">키워드: {node.keywords}</span>}
         {node.answer_html && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">답변있음</span>}
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openNew(node.id)}><Plus className="w-3 h-3" /></Button>
