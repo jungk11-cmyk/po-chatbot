@@ -95,6 +95,7 @@ const ScenariosPage = () => {
       answer_html: node.answer_html || "",
       keywords: node.keywords || "",
       sort_order: node.sort_order,
+      link_buttons: Array.isArray((node as any).link_buttons) ? (node as any).link_buttons : [],
     });
     setOpen(true);
   };
