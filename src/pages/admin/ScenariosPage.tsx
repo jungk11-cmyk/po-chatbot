@@ -82,7 +82,7 @@ const ScenariosPage = () => {
   const openNew = (pid: string | null) => {
     setEditing(null);
     setParentId(pid);
-    setForm({ label: "", message: "", answer_html: "", keywords: "", sort_order: 0 });
+    setForm({ label: "", message: "", answer_html: "", keywords: "", sort_order: 0, link_buttons: [] });
     setOpen(true);
   };
 
