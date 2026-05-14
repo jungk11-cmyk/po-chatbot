@@ -30,6 +30,7 @@ const ScenariosPage = () => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({
     label: "", message: "", answer_html: "", keywords: "", sort_order: 0,
+    link_buttons: [] as { label: string; url: string }[],
   });
 
   // Reload categories when language changes
@@ -81,7 +82,7 @@ const ScenariosPage = () => {
   const openNew = (pid: string | null) => {
     setEditing(null);
     setParentId(pid);
-    setForm({ label: "", message: "", answer_html: "", keywords: "", sort_order: 0 });
+    setForm({ label: "", message: "", answer_html: "", keywords: "", sort_order: 0, link_buttons: [] });
     setOpen(true);
   };
 
@@ -94,6 +95,7 @@ const ScenariosPage = () => {
       answer_html: node.answer_html || "",
       keywords: node.keywords || "",
       sort_order: node.sort_order,
+      link_buttons: Array.isArray((node as any).link_buttons) ? (node as any).link_buttons : [],
     });
     setOpen(true);
   };
@@ -106,6 +108,7 @@ const ScenariosPage = () => {
       answer_html: form.answer_html || null,
       keywords: form.keywords || null,
       sort_order: form.sort_order,
+      link_buttons: form.link_buttons.filter((b) => b.label.trim() && b.url.trim()),
       category_id: selectedCat,
       parent_id: parentId,
       language: lang,
@@ -184,7 +187,7 @@ const ScenariosPage = () => {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "노드 수정" : "노드 추가"} ({lang.toUpperCase()})</DialogTitle>
           </DialogHeader>
@@ -201,6 +204,66 @@ const ScenariosPage = () => {
               <label className="text-sm font-medium block mb-1">답변 (최종 답변 - 하위 항목 없을 때)</label>
               <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
             </div>
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">링크 버튼 설정 (답변 하단에 노출)</label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setForm({ ...form, link_buttons: [...form.link_buttons, { label: "", url: "" }] })
+                  }
+                >
+                  <Plus className="w-3 h-3 mr-1" /> 버튼 추가
+                </Button>
+              </div>
+              {form.link_buttons.length === 0 ? (
+                <p className="text-xs text-muted-foreground">등록된 링크 버튼이 없습니다.</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.link_buttons.map((b, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <Input
+                        className="flex-1"
+                        placeholder="버튼명 (예: 여주 위치 안내)"
+                        value={b.label}
+                        onChange={(e) => {
+                          const next = [...form.link_buttons];
+                          next[idx] = { ...next[idx], label: e.target.value };
+                          setForm({ ...form, link_buttons: next });
+                        }}
+                      />
+                      <Input
+                        className="flex-[2]"
+                        placeholder="https://..."
+                        value={b.url}
+                        onChange={(e) => {
+                          const next = [...form.link_buttons];
+                          next[idx] = { ...next[idx], url: e.target.value };
+                          setForm({ ...form, link_buttons: next });
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            link_buttons: form.link_buttons.filter((_, i) => i !== idx),
+                          })
+                        }
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-sm font-medium block mb-1">정렬 순서</label>
               <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />

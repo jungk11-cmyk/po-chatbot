@@ -1,6 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { LangCode } from "@/contexts/LanguageContext";
 
+export interface LinkButton {
+  label: string;
+  url: string;
+}
+
 export interface ChatMessage {
   id: string;
   type: "bot" | "user";
@@ -8,6 +13,7 @@ export interface ChatMessage {
   isHtml?: boolean;
   buttons?: { id: string; label: string }[];
   banners?: { id: string; name: string; icon?: string }[];
+  linkButtons?: LinkButton[];
 }
 
 export interface AskAgentOptions {
