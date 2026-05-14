@@ -139,7 +139,6 @@ const ScenariosPage = () => {
           <FileText className="w-4 h-4 text-muted-foreground" />
         )}
         <span className="flex-1 text-sm font-medium">{node.label}</span>
-        {node.keywords && <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">키워드: {node.keywords}</span>}
         {node.answer_html && <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">답변있음</span>}
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openNew(node.id)}><Plus className="w-3 h-3" /></Button>
@@ -201,10 +200,6 @@ const ScenariosPage = () => {
             <div>
               <label className="text-sm font-medium block mb-1">답변 (최종 답변 - 하위 항목 없을 때)</label>
               <RichTextEditor value={form.answer_html} onChange={(html) => setForm({ ...form, answer_html: html })} />
-            </div>
-            <div>
-              <label className="text-sm font-medium block mb-1">검색 인식 키워드 (쉼표로 구분)</label>
-              <Input value={form.keywords} onChange={(e) => setForm({ ...form, keywords: e.target.value })} placeholder="예: 여주점 운영시간, 여주 영업시간" />
             </div>
             <div>
               <label className="text-sm font-medium block mb-1">정렬 순서</label>
