@@ -30,6 +30,7 @@ const ScenariosPage = () => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({
     label: "", message: "", answer_html: "", keywords: "", sort_order: 0,
+    link_buttons: [] as { label: string; url: string }[],
   });
 
   // Reload categories when language changes
