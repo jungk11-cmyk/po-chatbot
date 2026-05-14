@@ -108,6 +108,7 @@ const ScenariosPage = () => {
       answer_html: form.answer_html || null,
       keywords: form.keywords || null,
       sort_order: form.sort_order,
+      link_buttons: form.link_buttons.filter((b) => b.label.trim() && b.url.trim()),
       category_id: selectedCat,
       parent_id: parentId,
       language: lang,
