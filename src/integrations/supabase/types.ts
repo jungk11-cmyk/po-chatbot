@@ -135,6 +135,7 @@ export type Database = {
           keywords: string | null
           label: string
           language: string
+          link_buttons: Json
           message: string | null
           parent_id: string | null
           sort_order: number
@@ -149,6 +150,7 @@ export type Database = {
           keywords?: string | null
           label: string
           language?: string
+          link_buttons?: Json
           message?: string | null
           parent_id?: string | null
           sort_order?: number
@@ -163,6 +165,7 @@ export type Database = {
           keywords?: string | null
           label?: string
           language?: string
+          link_buttons?: Json
           message?: string | null
           parent_id?: string | null
           sort_order?: number
