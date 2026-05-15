@@ -51,7 +51,7 @@ const ChatBubble = ({ message, onButtonClick, onBannerClick }: Props) => {
               href={lb.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-gradient-to-br from-[hsl(var(--gold-bright))] to-[hsl(var(--gold))] text-[hsl(var(--navy-deep))] text-xs font-bold px-3.5 py-2 rounded-lg shadow-[0_2px_8px_-1px_hsl(var(--gold)/0.5)] hover:shadow-[0_4px_12px_-1px_hsl(var(--gold)/0.7)] hover:-translate-y-0.5 transition-all duration-200 border border-[hsl(var(--gold)/0.4)]"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-br from-[hsl(220_10%_96%)] to-[hsl(220_10%_82%)] text-[hsl(var(--navy-deep))] text-xs font-semibold px-3.5 py-2 rounded-lg shadow-[0_2px_6px_-1px_hsl(220_15%_30%/0.2)] hover:shadow-[0_4px_10px_-1px_hsl(220_15%_30%/0.3)] hover:-translate-y-0.5 transition-all duration-200 border border-[hsl(220_10%_75%)]"
             >
               <span aria-hidden="true">🔗</span>
               {lb.label}
