@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ArrowUp } from "lucide-react";
 import ChatHeader from "./ChatHeader";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
@@ -17,7 +18,9 @@ import { useLanguage, UI_TEXTS } from "@/contexts/LanguageContext";
 const ChatWindow = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [faqKeywords, setFaqKeywords] = useState<{ id: string; keyword: string; answer_html: string }[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
   const { settings } = useSiteSettings(language);
   const t = UI_TEXTS[language];
@@ -123,16 +126,31 @@ const ChatWindow = () => {
   return (
     <div className="flex flex-col h-screen max-w-lg mx-auto bg-card shadow-2xl shadow-[hsl(var(--navy-deep)/0.25)] border-x border-border/50">
       <ChatHeader />
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 gradient-bg">
-        {messages.map((msg) => (
-          <ChatBubble
-            key={msg.id}
-            message={msg}
-            onButtonClick={handleButtonClick}
-            onBannerClick={handleBannerClick}
-          />
-        ))}
-        <div ref={bottomRef} />
+      <div className="flex-1 relative overflow-hidden">
+        <div
+          ref={scrollRef}
+          onScroll={(e) => setShowScrollTop((e.target as HTMLDivElement).scrollTop > 200)}
+          className="h-full overflow-y-auto p-4 space-y-3 gradient-bg"
+        >
+          {messages.map((msg) => (
+            <ChatBubble
+              key={msg.id}
+              message={msg}
+              onButtonClick={handleButtonClick}
+              onBannerClick={handleBannerClick}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </div>
+        {showScrollTop && (
+          <button
+            onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="맨 위로"
+            className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-[hsl(var(--navy))] text-white shadow-lg hover:bg-[hsl(var(--navy-deep))] hover:-translate-y-0.5 transition-all flex items-center justify-center z-10 animate-fade-in"
+          >
+            <ArrowUp size={18} />
+          </button>
+        )}
       </div>
       <ChatInput onSend={handleSend} faqKeywords={faqKeywords} onFaqClick={handleFaqClick} />
     </div>
