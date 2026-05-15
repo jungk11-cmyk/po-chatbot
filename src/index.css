@@ -113,6 +113,19 @@
   .gradient-bg { background: var(--gradient-bg); }
   .shadow-header { box-shadow: var(--shadow-header); }
   .shadow-glow-gold { box-shadow: var(--shadow-glow-gold); }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--navy) / 0.2) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--navy) / 0.2);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--navy) / 0.4);
+  }
 }
 
 @keyframes shimmer {
