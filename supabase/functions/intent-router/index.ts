@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         .eq("language", lang),
       supabase
         .from("scenario_nodes")
-        .select("label, keywords, answer_html")
+        .select("label, keywords, answer_html, link_buttons")
         .eq("is_active", true)
         .eq("language", lang)
         .not("answer_html", "is", null),
