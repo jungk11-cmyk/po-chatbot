@@ -115,7 +115,11 @@ Deno.serve(async (req) => {
 
     const scenarioBlock = (nodes || []).map((n: any, i: number) => {
       const kws = [n.label, n.keywords].filter(Boolean).join(" / ");
-      return `[SCENARIO-${i + 1}] topic: ${kws}\nanswer: ${htmlToText(n.answer_html)}`;
+      const lbs = Array.isArray(n.link_buttons) ? n.link_buttons : [];
+      const linksLine = lbs.length
+        ? `\nrelated_links: ${lbs.map((b: any) => `${b.label} → ${b.url}`).join(" | ")}`
+        : "";
+      return `[SCENARIO-${i + 1}] topic: ${kws}\nanswer: ${htmlToText(n.answer_html)}${linksLine}`;
     }).join("\n\n");
 
     const brandBlock = matchedBrands.map((b: any, i: number) => {
