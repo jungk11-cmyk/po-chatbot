@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         .eq("language", lang),
       supabase
         .from("scenario_nodes")
-        .select("label, keywords, answer_html")
+        .select("label, keywords, answer_html, link_buttons")
         .eq("is_active", true)
         .eq("language", lang)
         .not("answer_html", "is", null),
@@ -115,7 +115,11 @@ Deno.serve(async (req) => {
 
     const scenarioBlock = (nodes || []).map((n: any, i: number) => {
       const kws = [n.label, n.keywords].filter(Boolean).join(" / ");
-      return `[SCENARIO-${i + 1}] topic: ${kws}\nanswer: ${htmlToText(n.answer_html)}`;
+      const lbs = Array.isArray(n.link_buttons) ? n.link_buttons : [];
+      const linksLine = lbs.length
+        ? `\nrelated_links: ${lbs.map((b: any) => `${b.label} → ${b.url}`).join(" | ")}`
+        : "";
+      return `[SCENARIO-${i + 1}] topic: ${kws}\nanswer: ${htmlToText(n.answer_html)}${linksLine}`;
     }).join("\n\n");
 
     const brandBlock = matchedBrands.map((b: any, i: number) => {
@@ -134,7 +138,8 @@ ABSOLUTE RULES:
 5. Format the answer as clean HTML (use <br/> for line breaks, <strong> for emphasis, <a href="..." target="_blank"> for links). No markdown.
 6. Keep answers concise, friendly, and helpful. Don't dump entire source texts — extract what's relevant.
 7. If a brand was matched, include its store link in the answer.
-${customerPhone ? `8. Customer service phone (use this exact number when referring users): ${customerPhone}` : ""}
+8. When a SCENARIO source has "related_links", you MUST include EVERY one of those links as <a href="URL" target="_blank">label</a> in your answer. Do NOT skip any. If multiple SCENARIO sources are relevant (e.g., user asks about "promotions/events" and both 사은행사 and 이벤트 scenarios apply), include ALL related_links from ALL matching scenarios.
+${customerPhone ? `9. Customer service phone (use this exact number when referring users): ${customerPhone}` : ""}
 
 === SOURCES ===
 
