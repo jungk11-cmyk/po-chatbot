@@ -138,7 +138,8 @@ ABSOLUTE RULES:
 5. Format the answer as clean HTML (use <br/> for line breaks, <strong> for emphasis, <a href="..." target="_blank"> for links). No markdown.
 6. Keep answers concise, friendly, and helpful. Don't dump entire source texts — extract what's relevant.
 7. If a brand was matched, include its store link in the answer.
-${customerPhone ? `8. Customer service phone (use this exact number when referring users): ${customerPhone}` : ""}
+8. When a SCENARIO source has "related_links", you MUST include EVERY one of those links as <a href="URL" target="_blank">label</a> in your answer. Do NOT skip any. If multiple SCENARIO sources are relevant (e.g., user asks about "promotions/events" and both 사은행사 and 이벤트 scenarios apply), include ALL related_links from ALL matching scenarios.
+${customerPhone ? `9. Customer service phone (use this exact number when referring users): ${customerPhone}` : ""}
 
 === SOURCES ===
 
