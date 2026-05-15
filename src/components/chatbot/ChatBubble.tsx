@@ -44,7 +44,7 @@ const ChatBubble = ({ message, onButtonClick, onBannerClick }: Props) => {
       </div>
 
       {message.linkButtons && message.linkButtons.length > 0 && (
-        <div className="mt-2 max-w-[85%] flex flex-wrap gap-2">
+        <div class‌Name="mt-2 max-w-[85%] flex flex-col items-start gap-2">
           {message.linkButtons.map((lb, i) => (
             <a
               key={i}
